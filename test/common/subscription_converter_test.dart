@@ -90,11 +90,26 @@ void main() {
     test('skips malformed links when valid links exist', () {
       final yaml = converter.convertTextIfNeeded(
         'vmess://not-valid-base64\n'
+        'ss://d_91Ohw=#Broken\n'
         'hysteria2://secret@example.com:443#Valid',
       );
 
       expect(yaml, contains('name: "Valid"'));
       expect(yaml, isNot(contains('not-valid-base64')));
+      expect(yaml, isNot(contains('Broken')));
+    });
+
+    test('normalizes html escaped query separators', () {
+      final yaml = converter.convertTextIfNeeded(
+        'vless://00000000-0000-0000-0000-000000000000@example.com:443'
+        '?encryption=none&amp;security=reality&amp;type=tcp&amp;sni=sni.example'
+        '&amp;fp=chrome&amp;pbk=public-key&amp;sid=short-id#Escaped',
+      );
+
+      expect(yaml, contains('reality-opts:'));
+      expect(yaml, contains('public-key: "public-key"'));
+      expect(yaml, contains('short-id: "short-id"'));
+      expect(yaml, contains('client-fingerprint: "chrome"'));
     });
 
     test('converts vless grpc reality links', () {

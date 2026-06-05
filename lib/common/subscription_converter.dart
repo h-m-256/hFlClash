@@ -300,7 +300,13 @@ class SubscriptionConverter {
   List<String> _extractLinks(String content) {
     return _linkRegExp
         .allMatches(content)
-        .map((match) => match.group(0)!.trim().trimRightChar(','))
+        .map(
+          (match) => match
+              .group(0)!
+              .trim()
+              .trimRightChar(',')
+              .replaceAll('&amp;', '&'),
+        )
         .toList();
   }
 
@@ -950,7 +956,9 @@ class SubscriptionConverter {
           '=',
         );
       }
-      return utf8.decode(base64.decode(normalized), allowMalformed: true);
+      final decoded = utf8.decode(base64.decode(normalized));
+      if (_hasUnsafeControl(decoded)) return null;
+      return decoded;
     } catch (_) {
       return null;
     }
@@ -996,9 +1004,9 @@ class SubscriptionConverter {
 
   String _decode(String value) {
     try {
-      return Uri.decodeComponent(value);
+      return _cleanString(Uri.decodeComponent(value));
     } catch (_) {
-      return value;
+      return _cleanString(value);
     }
   }
 
@@ -1011,12 +1019,19 @@ class SubscriptionConverter {
   }
 
   void _put(Map<String, dynamic> target, String key, String? value) {
-    if (value != null && value.isNotEmpty) target[key] = value;
+    if (value == null || value.isEmpty) return;
+    final cleaned = _cleanString(value);
+    if (cleaned.isNotEmpty) target[key] = cleaned;
   }
 
   void _putDynamic(Map<String, dynamic> target, String key, Object? value) {
     if (value == null) return;
-    if (value is String && value.isEmpty) return;
+    if (value is String) {
+      final cleaned = _cleanString(value);
+      if (cleaned.isEmpty) return;
+      target[key] = cleaned;
+      return;
+    }
     target[key] = value;
   }
 
@@ -1059,6 +1074,20 @@ class SubscriptionConverter {
     } catch (_) {
       return null;
     }
+  }
+
+  bool _hasUnsafeControl(String value) {
+    return value.codeUnits.any((code) {
+      return code < 32 && code != 9 && code != 10 && code != 13;
+    });
+  }
+
+  String _cleanString(String value) {
+    return String.fromCharCodes(
+      value.codeUnits.where((code) {
+        return code >= 32 || code == 9 || code == 10 || code == 13;
+      }),
+    );
   }
 
   Map<String, String>? _parseHeaders(String? value) {
