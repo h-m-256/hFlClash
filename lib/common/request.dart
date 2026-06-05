@@ -34,13 +34,18 @@ class Request {
   Future<Response<Uint8List>> getFileResponseForUrl(
     String url, {
     String? userAgent,
+    Map<String, String> headers = const {},
   }) async {
     try {
+      final requestHeaders = Map<String, String>.from(headers);
+      if (userAgent != null) {
+        requestHeaders['User-Agent'] = userAgent;
+      }
       return await _clashDio.get<Uint8List>(
         url,
         options: Options(
           responseType: ResponseType.bytes,
-          headers: userAgent == null ? null : {'User-Agent': userAgent},
+          headers: requestHeaders.isEmpty ? null : requestHeaders,
         ),
       );
     } catch (e) {

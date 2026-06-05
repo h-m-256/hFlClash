@@ -529,6 +529,71 @@ class AppLocalizations {
     );
   }
 
+  /// `X-HWID`
+  String get xHwid {
+    return Intl.message('X-HWID', name: 'xHwid', desc: '', args: []);
+  }
+
+  /// `Device ID sent to subscriptions that require HAPP hardware binding`
+  String get xHwidDesc {
+    return Intl.message(
+      'Device ID sent to subscriptions that require HAPP hardware binding',
+      name: 'xHwidDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Converted from`
+  String get convertedFrom {
+    return Intl.message(
+      'Converted from',
+      name: 'convertedFrom',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clash/Mihomo YAML`
+  String get sourceClashYaml {
+    return Intl.message(
+      'Clash/Mihomo YAML',
+      name: 'sourceClashYaml',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Share links`
+  String get sourceShareLinks {
+    return Intl.message(
+      'Share links',
+      name: 'sourceShareLinks',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Base64 share links`
+  String get sourceBase64Links {
+    return Intl.message(
+      'Base64 share links',
+      name: 'sourceBase64Links',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `HAPP JSON`
+  String get sourceHappJson {
+    return Intl.message(
+      'HAPP JSON',
+      name: 'sourceHappJson',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `File`
   String get file {
     return Intl.message('File', name: 'file', desc: '', args: []);

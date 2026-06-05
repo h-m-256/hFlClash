@@ -258,6 +258,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "Управление глобальными добавленными правилами",
     ),
+    "convertedFrom": MessageLookupByLibrary.simpleMessage("Сконвертировано из"),
     "copy": MessageLookupByLibrary.simpleMessage("Копировать"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
       "Копирование переменных окружения",
@@ -968,7 +969,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "socksPort": MessageLookupByLibrary.simpleMessage("Socks-порт"),
     "sort": MessageLookupByLibrary.simpleMessage("Сортировка"),
     "source": MessageLookupByLibrary.simpleMessage("Источник"),
+    "sourceBase64Links": MessageLookupByLibrary.simpleMessage(
+      "Base64 со ссылками",
+    ),
+    "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
+      "Clash/Mihomo YAML",
+    ),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("Исходный IP"),
+    "sourceShareLinks": MessageLookupByLibrary.simpleMessage("Обычные ссылки"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("Специальный прокси"),
     "specialRules": MessageLookupByLibrary.simpleMessage("Специальные правила"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage(
@@ -1096,6 +1105,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
+    ),
+    "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
+    "xHwidDesc": MessageLookupByLibrary.simpleMessage(
+      "ID устройства для подписок, требующих привязку HAPP к железу",
     ),
     "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),

@@ -3,6 +3,25 @@ import 'dart:typed_data';
 
 import 'yaml.dart';
 
+enum SubscriptionSourceType { clashYaml, shareLinks, base64Links, happJson }
+
+class SubscriptionConversionResult {
+  final Uint8List bytes;
+  final SubscriptionSourceType? sourceType;
+
+  const SubscriptionConversionResult({required this.bytes, this.sourceType});
+}
+
+class SubscriptionTextConversionResult {
+  final String content;
+  final SubscriptionSourceType sourceType;
+
+  const SubscriptionTextConversionResult({
+    required this.content,
+    required this.sourceType,
+  });
+}
+
 class SubscriptionConverter {
   static final _linkRegExp = RegExp(
     r'(?:(?:vless|vmess|trojan|ss|hysteria2|hy2|hysteria|tuic)://)[^\s]+',
@@ -14,20 +33,57 @@ class SubscriptionConverter {
   );
 
   Uint8List convertBytesIfNeeded(Uint8List bytes) {
+    return convertBytes(bytes).bytes;
+  }
+
+  SubscriptionConversionResult convertBytes(Uint8List bytes) {
     final content = utf8.decode(bytes, allowMalformed: true);
-    final converted = convertTextIfNeeded(content);
-    if (converted == null) return bytes;
-    return Uint8List.fromList(utf8.encode(converted));
+    final converted = convertText(content);
+    if (converted == null) {
+      return SubscriptionConversionResult(
+        bytes: bytes,
+        sourceType: _isClashYaml(_normalizeText(content))
+            ? SubscriptionSourceType.clashYaml
+            : null,
+      );
+    }
+    return SubscriptionConversionResult(
+      bytes: Uint8List.fromList(utf8.encode(converted.content)),
+      sourceType: converted.sourceType,
+    );
   }
 
   String? convertTextIfNeeded(String content) {
+    return convertText(content)?.content;
+  }
+
+  SubscriptionTextConversionResult? convertText(String content) {
     final normalized = _normalizeText(content);
-    final source = _getLinkSource(normalized);
-    if (source == null) return null;
+    if (normalized.isEmpty || _isClashYaml(normalized)) return null;
 
-    final links = _extractLinks(source);
+    final happJson = _tryConvertHappJson(normalized);
+    if (happJson != null) return happJson;
+
+    final rawLinks = _extractLinks(normalized);
+    if (rawLinks.isNotEmpty) {
+      return _convertLinks(rawLinks, SubscriptionSourceType.shareLinks);
+    }
+
+    final decoded = _decodeWholeBase64(normalized);
+    if (decoded == null) return null;
+
+    final base64HappJson = _tryConvertHappJson(decoded);
+    if (base64HappJson != null) return base64HappJson;
+
+    final links = _extractLinks(decoded);
     if (links.isEmpty) return null;
+    return _convertLinks(links, SubscriptionSourceType.base64Links);
+  }
 
+  SubscriptionTextConversionResult? _convertLinks(
+    List<String> links,
+    SubscriptionSourceType sourceType,
+  ) {
     final proxies = <Map<String, dynamic>>[];
     for (final link in links) {
       final proxy = _parseLink(link);
@@ -39,6 +95,13 @@ class SubscriptionConverter {
       throw 'Unsupported subscription links';
     }
 
+    return SubscriptionTextConversionResult(
+      content: _buildConfig(proxies),
+      sourceType: sourceType,
+    );
+  }
+
+  String _buildConfig(List<Map<String, dynamic>> proxies) {
     _ensureUniqueNames(proxies);
     final proxyNames = proxies.map((proxy) => proxy['name'] as String).toList();
     final config = <String, dynamic>{
@@ -67,16 +130,171 @@ class SubscriptionConverter {
   }
 
   bool canConvert(String content) {
-    return _getLinkSource(_normalizeText(content)) != null;
+    return convertText(content) != null;
   }
 
-  String? _getLinkSource(String normalized) {
-    if (normalized.isEmpty || _clashYamlRegExp.hasMatch(normalized)) {
+  SubscriptionTextConversionResult? _tryConvertHappJson(String content) {
+    final data = _tryDecodeJson(content);
+    if (data == null) return null;
+    final proxies = _parseHappJson(data);
+    if (proxies.isEmpty) return null;
+    return SubscriptionTextConversionResult(
+      content: _buildConfig(proxies),
+      sourceType: SubscriptionSourceType.happJson,
+    );
+  }
+
+  Object? _tryDecodeJson(String content) {
+    final trimmed = content.trimLeft();
+    final first = trimmed.isEmpty ? null : trimmed[0];
+    if (first != '[' && first != '{') return null;
+    try {
+      return json.decode(content);
+    } catch (_) {
       return null;
     }
-    return _extractLinks(normalized).isNotEmpty
-        ? normalized
-        : _decodeWholeBase64(normalized);
+  }
+
+  List<Map<String, dynamic>> _parseHappJson(Object data) {
+    final items = data is List ? data : [data];
+    final proxies = <Map<String, dynamic>>[];
+    for (final item in items) {
+      final profile = _asMap(item);
+      if (profile == null) continue;
+      final profileName = profile['remarks']?.toString().takeIfNotEmpty;
+      final outbounds = profile['outbounds'];
+      if (outbounds is! List) continue;
+      for (final outbound in outbounds) {
+        final outboundMap = _asMap(outbound);
+        if (outboundMap == null) continue;
+        final proxy = _parseHappOutbound(outboundMap, profileName);
+        if (proxy != null) proxies.add(proxy);
+      }
+    }
+    return proxies;
+  }
+
+  Map<String, dynamic>? _parseHappOutbound(
+    Map<String, dynamic> outbound,
+    String? profileName,
+  ) {
+    final protocol = outbound['protocol']?.toString().toLowerCase();
+    return switch (protocol) {
+      'vless' => _parseHappVlessOutbound(outbound, profileName),
+      _ => null,
+    };
+  }
+
+  Map<String, dynamic>? _parseHappVlessOutbound(
+    Map<String, dynamic> outbound,
+    String? profileName,
+  ) {
+    final settings = _asMap(outbound['settings']);
+    final vnextList = settings?['vnext'];
+    if (vnextList is! List || vnextList.isEmpty) return null;
+    final vnext = _asMap(vnextList.first);
+    if (vnext == null) return null;
+
+    final server = vnext['address']?.toString();
+    final port = _intValue(vnext['port']);
+    final users = vnext['users'];
+    if (server == null || server.isEmpty || port == null || users is! List) {
+      return null;
+    }
+    Map<String, dynamic>? user;
+    for (final item in users) {
+      user = _asMap(item);
+      if (user != null) break;
+    }
+    if (user == null) return null;
+    final uuid = user['id']?.toString();
+    if (uuid == null || uuid.isEmpty) return null;
+
+    final tag = outbound['tag']?.toString().takeIfNotEmpty;
+    final proxy = <String, dynamic>{
+      'name': _happProxyName(profileName, tag, server, port),
+      'type': 'vless',
+      'server': server,
+      'port': port,
+      'uuid': uuid,
+      'udp': true,
+    };
+    _putDynamic(proxy, 'flow', user['flow']);
+    _putDynamic(proxy, 'encryption', user['encryption']);
+
+    final stream = _asMap(outbound['streamSettings']);
+    if (stream == null) return proxy;
+    final security = stream['security']?.toString().toLowerCase();
+    if (security == 'tls' || security == 'reality') {
+      proxy['tls'] = true;
+    }
+
+    final tls = _asMap(stream['tlsSettings']);
+    if (tls != null) {
+      _putDynamic(proxy, 'servername', tls['serverName']);
+      _putDynamic(proxy, 'client-fingerprint', tls['fingerprint']);
+      final alpn = _stringList(tls['alpn']);
+      if (alpn.isNotEmpty) proxy['alpn'] = alpn;
+      if (tls['allowInsecure'] == true) {
+        proxy['skip-cert-verify'] = true;
+      }
+    }
+
+    final reality = _asMap(stream['realitySettings']);
+    if (reality != null) {
+      _putDynamic(proxy, 'servername', reality['serverName']);
+      _putDynamic(proxy, 'client-fingerprint', reality['fingerprint']);
+      final realityOpts = <String, dynamic>{};
+      _putDynamic(realityOpts, 'public-key', reality['publicKey']);
+      _putDynamic(realityOpts, 'short-id', reality['shortId']);
+      _putDynamic(realityOpts, 'spider-x', reality['spiderX']);
+      if (realityOpts.isNotEmpty) proxy['reality-opts'] = realityOpts;
+    }
+
+    final network = stream['network']?.toString();
+    if (network == null || network.isEmpty || network == 'tcp') return proxy;
+    proxy['network'] = network;
+    switch (network) {
+      case 'grpc':
+        final grpc = _asMap(stream['grpcSettings']);
+        _applyGrpc(proxy, grpc?['serviceName']?.toString());
+        break;
+      case 'ws':
+      case 'httpupgrade':
+        final ws =
+            _asMap(stream['wsSettings']) ??
+            _asMap(stream['httpupgradeSettings']);
+        _applyWs(
+          proxy,
+          ws?['path']?.toString(),
+          _hostFromHeaders(ws?['headers']) ?? ws?['host']?.toString(),
+          httpUpgrade: network == 'httpupgrade',
+        );
+        break;
+      case 'xhttp':
+        _applyXhttpSettings(proxy, _asMap(stream['xhttpSettings']));
+        break;
+      case 'h2':
+        final http = _asMap(stream['httpSettings']);
+        final h2Opts = <String, dynamic>{};
+        _putDynamic(h2Opts, 'path', http?['path']);
+        final hosts = _stringList(http?['host']);
+        if (hosts.isNotEmpty) h2Opts['host'] = hosts;
+        if (h2Opts.isNotEmpty) proxy['h2-opts'] = h2Opts;
+        break;
+    }
+    return proxy;
+  }
+
+  String _happProxyName(
+    String? profileName,
+    String? tag,
+    String server,
+    int port,
+  ) {
+    final base = profileName?.takeIfNotEmpty ?? 'vless-$server:$port';
+    if (tag == null || tag == 'proxy') return base;
+    return '$base $tag';
   }
 
   List<String> _extractLinks(String content) {
@@ -384,8 +602,15 @@ class SubscriptionConverter {
     final network = _first(params, ['type', 'network']);
     if (network == null || network.isEmpty || network == 'tcp') return;
     proxy['network'] = network;
-    if (network == 'ws') {
-      _applyWs(proxy, params['path'], _first(params, ['host', 'Host']));
+    if (network == 'ws' || network == 'httpupgrade') {
+      _applyWs(
+        proxy,
+        params['path'],
+        _first(params, ['host', 'Host']),
+        httpUpgrade: network == 'httpupgrade',
+        earlyData: params['ed'],
+        earlyDataHeader: params['eh'],
+      );
     } else if (network == 'grpc') {
       _applyGrpc(
         proxy,
@@ -401,12 +626,32 @@ class SubscriptionConverter {
     }
   }
 
-  void _applyWs(Map<String, dynamic> proxy, String? path, String? host) {
+  void _applyWs(
+    Map<String, dynamic> proxy,
+    String? path,
+    String? host, {
+    bool httpUpgrade = false,
+    String? earlyData,
+    String? earlyDataHeader,
+  }) {
     final wsOpts = <String, dynamic>{};
     _put(wsOpts, 'path', path);
     if (host != null && host.isNotEmpty) {
       wsOpts['headers'] = {'Host': host};
     }
+    if (httpUpgrade) {
+      wsOpts['v2ray-http-upgrade'] = true;
+    }
+    final maxEarlyData = int.tryParse(earlyData ?? '');
+    if (maxEarlyData != null) {
+      if (httpUpgrade) {
+        wsOpts['v2ray-http-upgrade-fast-open'] = true;
+      } else {
+        wsOpts['max-early-data'] = maxEarlyData;
+        wsOpts['early-data-header-name'] = 'Sec-WebSocket-Protocol';
+      }
+    }
+    _put(wsOpts, 'early-data-header-name', earlyDataHeader);
     if (wsOpts.isNotEmpty) proxy['ws-opts'] = wsOpts;
   }
 
@@ -509,6 +754,23 @@ class SubscriptionConverter {
       _applyXhttpExtra(extra, opts);
     }
 
+    proxy['xhttp-opts'] = opts;
+  }
+
+  void _applyXhttpSettings(
+    Map<String, dynamic> proxy,
+    Map<String, dynamic>? settings,
+  ) {
+    final opts = <String, dynamic>{};
+    if (settings != null) {
+      _putDynamic(opts, 'path', settings['path']);
+      _putDynamic(opts, 'host', settings['host']);
+      _putDynamic(opts, 'mode', settings['mode']);
+      final headers = _asStringMap(settings['headers']);
+      if (headers != null) opts['headers'] = headers;
+      final extra = _asMap(settings['extra']);
+      if (extra != null) _applyXhttpExtra(extra, opts);
+    }
     proxy['xhttp-opts'] = opts;
   }
 
@@ -659,6 +921,10 @@ class SubscriptionConverter {
     return content.replaceFirst('\uFEFF', '').trim();
   }
 
+  bool _isClashYaml(String content) {
+    return _clashYamlRegExp.hasMatch(content);
+  }
+
   String? _decodeWholeBase64(String content) {
     final normalized = content.replaceAll(RegExp(r'\s+'), '');
     if (normalized.length < 16 ||
@@ -666,7 +932,10 @@ class SubscriptionConverter {
       return null;
     }
     final decoded = _decodeBase64(normalized);
-    if (decoded == null || _extractLinks(decoded).isEmpty) return null;
+    if (decoded == null) return null;
+    if (_extractLinks(decoded).isEmpty && _tryDecodeJson(decoded) == null) {
+      return null;
+    }
     return decoded;
   }
 
@@ -706,6 +975,19 @@ class SubscriptionConverter {
 
   int? _port(Uri uri) {
     return uri.hasPort ? uri.port : null;
+  }
+
+  int? _intValue(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  String? _hostFromHeaders(Object? value) {
+    final headers = _asStringMap(value);
+    if (headers == null) return null;
+    return headers['Host'] ?? headers['host'];
   }
 
   String _name(Uri uri, String fallback) {

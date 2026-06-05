@@ -28,6 +28,15 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
   currentGroupName: json['currentGroupName'] as String?,
   url: json['url'] as String? ?? '',
   userAgent: json['userAgent'] as String?,
+  requestHeaders:
+      (json['requestHeaders'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
+  sourceType: $enumDecodeNullable(
+    _$SubscriptionSourceTypeEnumMap,
+    json['sourceType'],
+  ),
   lastUpdateDate: json['lastUpdateDate'] == null
       ? null
       : DateTime.parse(json['lastUpdateDate'] as String),
@@ -61,6 +70,8 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'currentGroupName': instance.currentGroupName,
   'url': instance.url,
   'userAgent': instance.userAgent,
+  'requestHeaders': instance.requestHeaders,
+  'sourceType': _$SubscriptionSourceTypeEnumMap[instance.sourceType],
   'lastUpdateDate': instance.lastUpdateDate?.toIso8601String(),
   'autoUpdateDuration': instance.autoUpdateDuration.inMicroseconds,
   'subscriptionInfo': instance.subscriptionInfo,
@@ -70,6 +81,13 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'overwriteType': _$OverwriteTypeEnumMap[instance.overwriteType]!,
   'scriptId': instance.scriptId,
   'order': instance.order,
+};
+
+const _$SubscriptionSourceTypeEnumMap = {
+  SubscriptionSourceType.clashYaml: 'clashYaml',
+  SubscriptionSourceType.shareLinks: 'shareLinks',
+  SubscriptionSourceType.base64Links: 'base64Links',
+  SubscriptionSourceType.happJson: 'happJson',
 };
 
 const _$OverwriteTypeEnumMap = {

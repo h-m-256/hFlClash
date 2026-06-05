@@ -171,6 +171,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "contentNotEmpty": MessageLookupByLibrary.simpleMessage("内容不能为空"),
     "contentScheme": MessageLookupByLibrary.simpleMessage("内容主题"),
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage("控制全局附加规则"),
+    "convertedFrom": MessageLookupByLibrary.simpleMessage("转换来源"),
     "copy": MessageLookupByLibrary.simpleMessage("复制"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage("复制环境变量"),
     "copyLink": MessageLookupByLibrary.simpleMessage("复制链接"),
@@ -635,7 +636,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "socksPort": MessageLookupByLibrary.simpleMessage("Socks端口"),
     "sort": MessageLookupByLibrary.simpleMessage("排序"),
     "source": MessageLookupByLibrary.simpleMessage("来源"),
+    "sourceBase64Links": MessageLookupByLibrary.simpleMessage("Base64 分享链接"),
+    "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
+      "Clash/Mihomo YAML",
+    ),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("源IP"),
+    "sourceShareLinks": MessageLookupByLibrary.simpleMessage("分享链接"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("特殊代理"),
     "specialRules": MessageLookupByLibrary.simpleMessage("特殊规则"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("网速统计"),
@@ -718,6 +725,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("重启VPN后改变生效"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
+    "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
+    "xHwidDesc": MessageLookupByLibrary.simpleMessage(
+      "发送给需要 HAPP 硬件绑定的订阅的设备 ID",
+    ),
     "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };

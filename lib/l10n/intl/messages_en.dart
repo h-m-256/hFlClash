@@ -251,6 +251,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "Control global added rules",
     ),
+    "convertedFrom": MessageLookupByLibrary.simpleMessage("Converted from"),
     "copy": MessageLookupByLibrary.simpleMessage("Copy"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage(
       "Copying environment variables",
@@ -921,7 +922,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "socksPort": MessageLookupByLibrary.simpleMessage("Socks Port"),
     "sort": MessageLookupByLibrary.simpleMessage("Sort"),
     "source": MessageLookupByLibrary.simpleMessage("Source"),
+    "sourceBase64Links": MessageLookupByLibrary.simpleMessage(
+      "Base64 share links",
+    ),
+    "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
+      "Clash/Mihomo YAML",
+    ),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("Source IP"),
+    "sourceShareLinks": MessageLookupByLibrary.simpleMessage("Share links"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("Special proxy"),
     "specialRules": MessageLookupByLibrary.simpleMessage("special rules"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("Speed statistics"),
@@ -1032,6 +1041,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
+    "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
+    "xHwidDesc": MessageLookupByLibrary.simpleMessage(
+      "Device ID sent to subscriptions that require HAPP hardware binding",
+    ),
     "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };

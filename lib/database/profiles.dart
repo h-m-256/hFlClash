@@ -15,6 +15,12 @@ class Profiles extends Table {
 
   TextColumn get userAgent => text().nullable()();
 
+  TextColumn get requestHeaders => text()
+      .map(const StringMapConverter())
+      .withDefault(const Constant('{}'))();
+
+  TextColumn get sourceType => textEnum<SubscriptionSourceType>().nullable()();
+
   DateTimeColumn get lastUpdateDate => dateTime().nullable()();
 
   TextColumn get overwriteType => textEnum<OverwriteType>()();
@@ -114,6 +120,8 @@ extension RawProfilExt on RawProfile {
       currentGroupName: currentGroupName,
       url: url,
       userAgent: userAgent,
+      requestHeaders: requestHeaders,
+      sourceType: sourceType,
       lastUpdateDate: lastUpdateDate,
       autoUpdateDuration: Duration(milliseconds: autoUpdateDurationMillis),
       subscriptionInfo: subscriptionInfo,
@@ -135,6 +143,8 @@ extension ProfilesCompanionExt on Profile {
       currentGroupName: Value(currentGroupName),
       url: url,
       userAgent: Value(userAgent),
+      requestHeaders: Value(requestHeaders),
+      sourceType: Value(sourceType),
       lastUpdateDate: Value(lastUpdateDate),
       autoUpdateDurationMillis: autoUpdateDuration.inMilliseconds,
       subscriptionInfo: Value(subscriptionInfo),

@@ -58,6 +58,28 @@ class $ProfilesTable extends Profiles
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  @override
+  late final GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  requestHeaders = GeneratedColumn<String>(
+    'request_headers',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  ).withConverter<Map<String, String>>($ProfilesTable.$converterrequestHeaders);
+  @override
+  late final GeneratedColumnWithTypeConverter<SubscriptionSourceType?, String>
+  sourceType =
+      GeneratedColumn<String>(
+        'source_type',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      ).withConverter<SubscriptionSourceType?>(
+        $ProfilesTable.$convertersourceTypen,
+      );
   static const VerificationMeta _lastUpdateDateMeta = const VerificationMeta(
     'lastUpdateDate',
   );
@@ -158,6 +180,8 @@ class $ProfilesTable extends Profiles
     currentGroupName,
     url,
     userAgent,
+    requestHeaders,
+    sourceType,
     lastUpdateDate,
     overwriteType,
     scriptId,
@@ -283,6 +307,18 @@ class $ProfilesTable extends Profiles
         DriftSqlType.string,
         data['${effectivePrefix}user_agent'],
       ),
+      requestHeaders: $ProfilesTable.$converterrequestHeaders.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}request_headers'],
+        )!,
+      ),
+      sourceType: $ProfilesTable.$convertersourceTypen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}source_type'],
+        ),
+      ),
       lastUpdateDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_update_date'],
@@ -335,6 +371,14 @@ class $ProfilesTable extends Profiles
     return $ProfilesTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<Map<String, String>, String> $converterrequestHeaders =
+      const StringMapConverter();
+  static JsonTypeConverter2<SubscriptionSourceType, String, String>
+  $convertersourceType = const EnumNameConverter<SubscriptionSourceType>(
+    SubscriptionSourceType.values,
+  );
+  static JsonTypeConverter2<SubscriptionSourceType?, String?, String?>
+  $convertersourceTypen = JsonTypeConverter2.asNullable($convertersourceType);
   static JsonTypeConverter2<OverwriteType, String, String>
   $converteroverwriteType = const EnumNameConverter<OverwriteType>(
     OverwriteType.values,
@@ -353,6 +397,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final String? currentGroupName;
   final String url;
   final String? userAgent;
+  final Map<String, String> requestHeaders;
+  final SubscriptionSourceType? sourceType;
   final DateTime? lastUpdateDate;
   final OverwriteType overwriteType;
   final int? scriptId;
@@ -368,6 +414,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     this.currentGroupName,
     required this.url,
     this.userAgent,
+    required this.requestHeaders,
+    this.sourceType,
     this.lastUpdateDate,
     required this.overwriteType,
     this.scriptId,
@@ -389,6 +437,16 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     map['url'] = Variable<String>(url);
     if (!nullToAbsent || userAgent != null) {
       map['user_agent'] = Variable<String>(userAgent);
+    }
+    {
+      map['request_headers'] = Variable<String>(
+        $ProfilesTable.$converterrequestHeaders.toSql(requestHeaders),
+      );
+    }
+    if (!nullToAbsent || sourceType != null) {
+      map['source_type'] = Variable<String>(
+        $ProfilesTable.$convertersourceTypen.toSql(sourceType),
+      );
     }
     if (!nullToAbsent || lastUpdateDate != null) {
       map['last_update_date'] = Variable<DateTime>(lastUpdateDate);
@@ -437,6 +495,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       userAgent: userAgent == null && nullToAbsent
           ? const Value.absent()
           : Value(userAgent),
+      requestHeaders: Value(requestHeaders),
+      sourceType: sourceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceType),
       lastUpdateDate: lastUpdateDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastUpdateDate),
@@ -468,6 +530,12 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       currentGroupName: serializer.fromJson<String?>(json['currentGroupName']),
       url: serializer.fromJson<String>(json['url']),
       userAgent: serializer.fromJson<String?>(json['userAgent']),
+      requestHeaders: serializer.fromJson<Map<String, String>>(
+        json['requestHeaders'],
+      ),
+      sourceType: $ProfilesTable.$convertersourceTypen.fromJson(
+        serializer.fromJson<String?>(json['sourceType']),
+      ),
       lastUpdateDate: serializer.fromJson<DateTime?>(json['lastUpdateDate']),
       overwriteType: $ProfilesTable.$converteroverwriteType.fromJson(
         serializer.fromJson<String>(json['overwriteType']),
@@ -496,6 +564,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'currentGroupName': serializer.toJson<String?>(currentGroupName),
       'url': serializer.toJson<String>(url),
       'userAgent': serializer.toJson<String?>(userAgent),
+      'requestHeaders': serializer.toJson<Map<String, String>>(requestHeaders),
+      'sourceType': serializer.toJson<String?>(
+        $ProfilesTable.$convertersourceTypen.toJson(sourceType),
+      ),
       'lastUpdateDate': serializer.toJson<DateTime?>(lastUpdateDate),
       'overwriteType': serializer.toJson<String>(
         $ProfilesTable.$converteroverwriteType.toJson(overwriteType),
@@ -520,6 +592,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     Value<String?> currentGroupName = const Value.absent(),
     String? url,
     Value<String?> userAgent = const Value.absent(),
+    Map<String, String>? requestHeaders,
+    Value<SubscriptionSourceType?> sourceType = const Value.absent(),
     Value<DateTime?> lastUpdateDate = const Value.absent(),
     OverwriteType? overwriteType,
     Value<int?> scriptId = const Value.absent(),
@@ -537,6 +611,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         : this.currentGroupName,
     url: url ?? this.url,
     userAgent: userAgent.present ? userAgent.value : this.userAgent,
+    requestHeaders: requestHeaders ?? this.requestHeaders,
+    sourceType: sourceType.present ? sourceType.value : this.sourceType,
     lastUpdateDate: lastUpdateDate.present
         ? lastUpdateDate.value
         : this.lastUpdateDate,
@@ -561,6 +637,12 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           : this.currentGroupName,
       url: data.url.present ? data.url.value : this.url,
       userAgent: data.userAgent.present ? data.userAgent.value : this.userAgent,
+      requestHeaders: data.requestHeaders.present
+          ? data.requestHeaders.value
+          : this.requestHeaders,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
       lastUpdateDate: data.lastUpdateDate.present
           ? data.lastUpdateDate.value
           : this.lastUpdateDate,
@@ -593,6 +675,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('currentGroupName: $currentGroupName, ')
           ..write('url: $url, ')
           ..write('userAgent: $userAgent, ')
+          ..write('requestHeaders: $requestHeaders, ')
+          ..write('sourceType: $sourceType, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('scriptId: $scriptId, ')
@@ -613,6 +697,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     currentGroupName,
     url,
     userAgent,
+    requestHeaders,
+    sourceType,
     lastUpdateDate,
     overwriteType,
     scriptId,
@@ -632,6 +718,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.currentGroupName == this.currentGroupName &&
           other.url == this.url &&
           other.userAgent == this.userAgent &&
+          other.requestHeaders == this.requestHeaders &&
+          other.sourceType == this.sourceType &&
           other.lastUpdateDate == this.lastUpdateDate &&
           other.overwriteType == this.overwriteType &&
           other.scriptId == this.scriptId &&
@@ -649,6 +737,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<String?> currentGroupName;
   final Value<String> url;
   final Value<String?> userAgent;
+  final Value<Map<String, String>> requestHeaders;
+  final Value<SubscriptionSourceType?> sourceType;
   final Value<DateTime?> lastUpdateDate;
   final Value<OverwriteType> overwriteType;
   final Value<int?> scriptId;
@@ -664,6 +754,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.currentGroupName = const Value.absent(),
     this.url = const Value.absent(),
     this.userAgent = const Value.absent(),
+    this.requestHeaders = const Value.absent(),
+    this.sourceType = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     this.overwriteType = const Value.absent(),
     this.scriptId = const Value.absent(),
@@ -680,6 +772,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.currentGroupName = const Value.absent(),
     required String url,
     this.userAgent = const Value.absent(),
+    this.requestHeaders = const Value.absent(),
+    this.sourceType = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     required OverwriteType overwriteType,
     this.scriptId = const Value.absent(),
@@ -702,6 +796,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? currentGroupName,
     Expression<String>? url,
     Expression<String>? userAgent,
+    Expression<String>? requestHeaders,
+    Expression<String>? sourceType,
     Expression<DateTime>? lastUpdateDate,
     Expression<String>? overwriteType,
     Expression<int>? scriptId,
@@ -718,6 +814,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (currentGroupName != null) 'current_group_name': currentGroupName,
       if (url != null) 'url': url,
       if (userAgent != null) 'user_agent': userAgent,
+      if (requestHeaders != null) 'request_headers': requestHeaders,
+      if (sourceType != null) 'source_type': sourceType,
       if (lastUpdateDate != null) 'last_update_date': lastUpdateDate,
       if (overwriteType != null) 'overwrite_type': overwriteType,
       if (scriptId != null) 'script_id': scriptId,
@@ -737,6 +835,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<String?>? currentGroupName,
     Value<String>? url,
     Value<String?>? userAgent,
+    Value<Map<String, String>>? requestHeaders,
+    Value<SubscriptionSourceType?>? sourceType,
     Value<DateTime?>? lastUpdateDate,
     Value<OverwriteType>? overwriteType,
     Value<int?>? scriptId,
@@ -753,6 +853,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       currentGroupName: currentGroupName ?? this.currentGroupName,
       url: url ?? this.url,
       userAgent: userAgent ?? this.userAgent,
+      requestHeaders: requestHeaders ?? this.requestHeaders,
+      sourceType: sourceType ?? this.sourceType,
       lastUpdateDate: lastUpdateDate ?? this.lastUpdateDate,
       overwriteType: overwriteType ?? this.overwriteType,
       scriptId: scriptId ?? this.scriptId,
@@ -783,6 +885,16 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     }
     if (userAgent.present) {
       map['user_agent'] = Variable<String>(userAgent.value);
+    }
+    if (requestHeaders.present) {
+      map['request_headers'] = Variable<String>(
+        $ProfilesTable.$converterrequestHeaders.toSql(requestHeaders.value),
+      );
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(
+        $ProfilesTable.$convertersourceTypen.toSql(sourceType.value),
+      );
     }
     if (lastUpdateDate.present) {
       map['last_update_date'] = Variable<DateTime>(lastUpdateDate.value);
@@ -832,6 +944,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('currentGroupName: $currentGroupName, ')
           ..write('url: $url, ')
           ..write('userAgent: $userAgent, ')
+          ..write('requestHeaders: $requestHeaders, ')
+          ..write('sourceType: $sourceType, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('scriptId: $scriptId, ')
@@ -3521,6 +3635,8 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<String?> currentGroupName,
       required String url,
       Value<String?> userAgent,
+      Value<Map<String, String>> requestHeaders,
+      Value<SubscriptionSourceType?> sourceType,
       Value<DateTime?> lastUpdateDate,
       required OverwriteType overwriteType,
       Value<int?> scriptId,
@@ -3538,6 +3654,8 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<String?> currentGroupName,
       Value<String> url,
       Value<String?> userAgent,
+      Value<Map<String, String>> requestHeaders,
+      Value<SubscriptionSourceType?> sourceType,
       Value<DateTime?> lastUpdateDate,
       Value<OverwriteType> overwriteType,
       Value<int?> scriptId,
@@ -3627,6 +3745,26 @@ class $$ProfilesTableFilterComposer
   ColumnFilters<String> get userAgent => $composableBuilder(
     column: $table.userAgent,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<
+    Map<String, String>,
+    Map<String, String>,
+    String
+  >
+  get requestHeaders => $composableBuilder(
+    column: $table.requestHeaders,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<
+    SubscriptionSourceType?,
+    SubscriptionSourceType,
+    String
+  >
+  get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<DateTime> get lastUpdateDate => $composableBuilder(
@@ -3767,6 +3905,16 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get requestHeaders => $composableBuilder(
+    column: $table.requestHeaders,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastUpdateDate => $composableBuilder(
     column: $table.lastUpdateDate,
     builder: (column) => ColumnOrderings(column),
@@ -3838,6 +3986,18 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumn<String> get userAgent =>
       $composableBuilder(column: $table.userAgent, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  get requestHeaders => $composableBuilder(
+    column: $table.requestHeaders,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<SubscriptionSourceType?, String>
+  get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastUpdateDate => $composableBuilder(
     column: $table.lastUpdateDate,
@@ -3968,6 +4128,10 @@ class $$ProfilesTableTableManager
                 Value<String?> currentGroupName = const Value.absent(),
                 Value<String> url = const Value.absent(),
                 Value<String?> userAgent = const Value.absent(),
+                Value<Map<String, String>> requestHeaders =
+                    const Value.absent(),
+                Value<SubscriptionSourceType?> sourceType =
+                    const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 Value<OverwriteType> overwriteType = const Value.absent(),
                 Value<int?> scriptId = const Value.absent(),
@@ -3984,6 +4148,8 @@ class $$ProfilesTableTableManager
                 currentGroupName: currentGroupName,
                 url: url,
                 userAgent: userAgent,
+                requestHeaders: requestHeaders,
+                sourceType: sourceType,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 scriptId: scriptId,
@@ -4001,6 +4167,10 @@ class $$ProfilesTableTableManager
                 Value<String?> currentGroupName = const Value.absent(),
                 required String url,
                 Value<String?> userAgent = const Value.absent(),
+                Value<Map<String, String>> requestHeaders =
+                    const Value.absent(),
+                Value<SubscriptionSourceType?> sourceType =
+                    const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 required OverwriteType overwriteType,
                 Value<int?> scriptId = const Value.absent(),
@@ -4017,6 +4187,8 @@ class $$ProfilesTableTableManager
                 currentGroupName: currentGroupName,
                 url: url,
                 userAgent: userAgent,
+                requestHeaders: requestHeaders,
+                sourceType: sourceType,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 scriptId: scriptId,

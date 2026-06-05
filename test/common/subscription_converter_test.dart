@@ -45,8 +45,10 @@ void main() {
           'trojan://password@example.com:443?sni=sni.example#TrojanNode';
       final encoded = base64.encode(utf8.encode(link));
 
-      final yaml = converter.convertTextIfNeeded(encoded);
+      final converted = converter.convertText(encoded);
+      final yaml = converted?.content;
 
+      expect(converted?.sourceType, SubscriptionSourceType.base64Links);
       expect(yaml, isNotNull);
       expect(yaml, contains('type: "trojan"'));
       expect(yaml, contains('name: "TrojanNode"'));
@@ -61,6 +63,10 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode(clashYaml));
 
       expect(converter.convertBytesIfNeeded(bytes), bytes);
+      expect(
+        converter.convertBytes(bytes).sourceType,
+        SubscriptionSourceType.clashYaml,
+      );
     });
 
     test('deduplicates proxy names', () {
@@ -152,6 +158,59 @@ void main() {
       expect(yaml, contains('server: "download.example.com"'));
       expect(yaml, contains('servername: "download-sni.example"'));
       expect(yaml, contains('path: "/download"'));
+    });
+
+    test('converts HAPP JSON vless outbounds', () {
+      final happJson = jsonEncode([
+        {
+          'remarks': 'HAPP Profile',
+          'outbounds': [
+            {
+              'tag': 'proxy',
+              'protocol': 'vless',
+              'settings': {
+                'vnext': [
+                  {
+                    'address': 'example.com',
+                    'port': 443,
+                    'users': [
+                      {
+                        'id': '00000000-0000-0000-0000-000000000000',
+                        'encryption': 'none',
+                        'flow': 'xtls-rprx-vision',
+                      },
+                    ],
+                  },
+                ],
+              },
+              'streamSettings': {
+                'network': 'grpc',
+                'security': 'reality',
+                'realitySettings': {
+                  'serverName': 'sni.example',
+                  'fingerprint': 'chrome',
+                  'publicKey': 'public-key',
+                  'shortId': 'short-id',
+                },
+                'grpcSettings': {'serviceName': 'gun'},
+              },
+            },
+            {'tag': 'direct', 'protocol': 'freedom'},
+          ],
+        },
+      ]);
+
+      final converted = converter.convertText(happJson);
+      final yaml = converted?.content;
+
+      expect(converted?.sourceType, SubscriptionSourceType.happJson);
+      expect(yaml, contains('name: "HAPP Profile"'));
+      expect(yaml, contains('type: "vless"'));
+      expect(yaml, contains('flow: "xtls-rprx-vision"'));
+      expect(yaml, contains('network: "grpc"'));
+      expect(yaml, contains('grpc-service-name: "gun"'));
+      expect(yaml, contains('reality-opts:'));
+      expect(yaml, contains('public-key: "public-key"'));
     });
   });
 }

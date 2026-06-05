@@ -9,13 +9,16 @@ void main() {
         label: 'custom',
         url: 'https://example.com/sub',
         userAgent: defaultCustomSubscriptionUserAgent,
-      );
+        requestHeaders: {'X-HWID': '123456'},
+      ).copyWith(sourceType: SubscriptionSourceType.base64Links);
 
       final json = profile.toJson();
       final restored = Profile.fromJson(json);
 
       expect(json['userAgent'], defaultCustomSubscriptionUserAgent);
       expect(restored.userAgent, defaultCustomSubscriptionUserAgent);
+      expect(restored.requestHeaders, {'X-HWID': '123456'});
+      expect(restored.sourceType, SubscriptionSourceType.base64Links);
     });
   });
 }

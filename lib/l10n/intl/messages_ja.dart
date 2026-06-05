@@ -193,6 +193,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "controlGlobalAddedRules": MessageLookupByLibrary.simpleMessage(
       "グローバル追加ルールを制御",
     ),
+    "convertedFrom": MessageLookupByLibrary.simpleMessage("変換元"),
     "copy": MessageLookupByLibrary.simpleMessage("コピー"),
     "copyEnvVar": MessageLookupByLibrary.simpleMessage("環境変数をコピー"),
     "copyLink": MessageLookupByLibrary.simpleMessage("リンクをコピー"),
@@ -741,7 +742,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "socksPort": MessageLookupByLibrary.simpleMessage("Socksポート"),
     "sort": MessageLookupByLibrary.simpleMessage("並び替え"),
     "source": MessageLookupByLibrary.simpleMessage("ソース"),
+    "sourceBase64Links": MessageLookupByLibrary.simpleMessage("Base64 共有リンク"),
+    "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
+      "Clash/Mihomo YAML",
+    ),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("送信元IP"),
+    "sourceShareLinks": MessageLookupByLibrary.simpleMessage("共有リンク"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("特殊プロキシ"),
     "specialRules": MessageLookupByLibrary.simpleMessage("特殊ルール"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("速度統計"),
@@ -830,6 +837,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("変更はVPN再起動後に有効"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
+    "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
+    "xHwidDesc": MessageLookupByLibrary.simpleMessage(
+      "HAPP のハードウェア紐付けが必要な購読に送信するデバイス ID",
+    ),
     "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };

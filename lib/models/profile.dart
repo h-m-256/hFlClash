@@ -49,6 +49,8 @@ abstract class Profile with _$Profile {
     String? currentGroupName,
     @Default('') String url,
     String? userAgent,
+    @Default({}) Map<String, String> requestHeaders,
+    SubscriptionSourceType? sourceType,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
     SubscriptionInfo? subscriptionInfo,
@@ -63,12 +65,18 @@ abstract class Profile with _$Profile {
   factory Profile.fromJson(Map<String, Object?> json) =>
       _$ProfileFromJson(json);
 
-  factory Profile.normal({String? label, String url = '', String? userAgent}) {
+  factory Profile.normal({
+    String? label,
+    String url = '',
+    String? userAgent,
+    Map<String, String> requestHeaders = const {},
+  }) {
     final id = snowflake.id;
     return Profile(
       label: label ?? '',
       url: url,
       userAgent: userAgent,
+      requestHeaders: requestHeaders,
       id: id,
       autoUpdateDuration: defaultUpdateDuration,
     );
@@ -209,6 +217,7 @@ extension ProfileExtension on Profile {
     final response = await request.getFileResponseForUrl(
       url,
       userAgent: userAgent?.trim().value,
+      headers: requestHeaders,
     );
     final disposition = response.headers.value('content-disposition');
     final userinfo = response.headers.value('subscription-userinfo');
@@ -224,9 +233,8 @@ extension ProfileExtension on Profile {
   Future<Profile> saveFile(Uint8List bytes) async {
     final path = await appPath.tempFilePath;
     final tempFile = File(path);
-    await tempFile.safeWriteAsBytes(
-      subscriptionConverter.convertBytesIfNeeded(bytes),
-    );
+    final converted = subscriptionConverter.convertBytes(bytes);
+    await tempFile.safeWriteAsBytes(converted.bytes);
     final message = await coreController.validateConfig(path);
     if (message.isNotEmpty) {
       throw message;
@@ -234,7 +242,10 @@ extension ProfileExtension on Profile {
     final mFile = await file;
     await tempFile.copy(mFile.path);
     await tempFile.safeDelete();
-    return copyWith(lastUpdateDate: DateTime.now());
+    return copyWith(
+      lastUpdateDate: DateTime.now(),
+      sourceType: converted.sourceType ?? sourceType,
+    );
   }
 
   Future<Profile> saveFileWithPath(String path) async {

@@ -30,8 +30,10 @@ class _EditProfileViewState extends State<EditProfileView> {
   late final TextEditingController _labelController;
   late final TextEditingController _urlController;
   late final TextEditingController _userAgentController;
+  late final TextEditingController _hwidController;
   late final TextEditingController _autoUpdateDurationController;
   late bool _autoUpdate;
+  late bool _sendHwid;
   String? _rawText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _fileInfoNotifier = ValueNotifier<FileInfo?>(null);
@@ -45,6 +47,9 @@ class _EditProfileViewState extends State<EditProfileView> {
     _userAgentController = TextEditingController(
       text: widget.profile.userAgent ?? '',
     );
+    final hwid = _headerValue(widget.profile.requestHeaders, 'X-HWID');
+    _sendHwid = hwid != null;
+    _hwidController = TextEditingController(text: hwid ?? '');
     _autoUpdate = widget.profile.autoUpdate;
     _autoUpdateDurationController = TextEditingController(
       text: widget.profile.autoUpdateDuration.inMinutes.toString(),
@@ -70,6 +75,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     var profile = widget.profile.copyWith(
       url: _urlController.text,
       userAgent: _userAgentController.text.trim().value,
+      requestHeaders: _buildRequestHeaders(),
       label: _labelController.text,
       autoUpdate: _autoUpdate,
       autoUpdateDuration: Duration(
@@ -79,7 +85,13 @@ class _EditProfileViewState extends State<EditProfileView> {
     final profilesAction = globalState.container.read(
       profilesActionProvider.notifier,
     );
-    final hasUpdate = widget.profile.url != profile.url;
+    final hasUpdate =
+        widget.profile.url != profile.url ||
+        widget.profile.userAgent != profile.userAgent ||
+        !stringAndStringMapEquality.equals(
+          widget.profile.requestHeaders,
+          profile.requestHeaders,
+        );
     if (_fileData != null) {
       if (profile.type == ProfileType.url && _autoUpdate) {
         final appLocalizations = context.appLocalizations;
@@ -112,6 +124,43 @@ class _EditProfileViewState extends State<EditProfileView> {
     setState(() {
       _autoUpdate = value;
     });
+  }
+
+  void _setSendHwid(bool value) {
+    if (_sendHwid == value) return;
+    setState(() {
+      _sendHwid = value;
+    });
+  }
+
+  String? _headerValue(Map<String, String> headers, String key) {
+    final lowerKey = key.toLowerCase();
+    for (final entry in headers.entries) {
+      if (entry.key.toLowerCase() == lowerKey) return entry.value;
+    }
+    return null;
+  }
+
+  Map<String, String> _buildRequestHeaders() {
+    final headers = Map<String, String>.from(widget.profile.requestHeaders)
+      ..removeWhere((key, _) => key.toLowerCase() == 'x-hwid');
+    if (_sendHwid && _hwidController.text.trim().isNotEmpty) {
+      headers['X-HWID'] = _hwidController.text.trim();
+    }
+    return headers;
+  }
+
+  String _sourceTypeLabel(
+    BuildContext context,
+    SubscriptionSourceType sourceType,
+  ) {
+    final appLocalizations = context.appLocalizations;
+    return switch (sourceType) {
+      SubscriptionSourceType.clashYaml => appLocalizations.sourceClashYaml,
+      SubscriptionSourceType.shareLinks => appLocalizations.sourceShareLinks,
+      SubscriptionSourceType.base64Links => appLocalizations.sourceBase64Links,
+      SubscriptionSourceType.happJson => appLocalizations.sourceHappJson,
+    };
   }
 
   Future<void> _handleSaveEdit(BuildContext context, String data) async {
@@ -212,6 +261,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _labelController.dispose();
     _urlController.dispose();
     _userAgentController.dispose();
+    _hwidController.dispose();
     _fileInfoNotifier.dispose();
     _autoUpdateDurationController.dispose();
     super.dispose();
@@ -261,6 +311,13 @@ class _EditProfileViewState extends State<EditProfileView> {
             },
           ),
         ),
+        if (widget.profile.sourceType != null)
+          ListItem(
+            title: Text(appLocalizations.convertedFrom),
+            subtitle: Text(
+              _sourceTypeLabel(context, widget.profile.sourceType!),
+            ),
+          ),
         ListItem(
           title: TextFormField(
             textInputAction: TextInputAction.next,
@@ -271,6 +328,32 @@ class _EditProfileViewState extends State<EditProfileView> {
               labelText: appLocalizations.userAgent,
               helperText: appLocalizations.userAgentDesc,
             ),
+          ),
+        ),
+        ListItem.switchItem(
+          title: Text(appLocalizations.xHwid),
+          subtitle: Text(appLocalizations.xHwidDesc),
+          delegate: SwitchDelegate<bool>(
+            value: _sendHwid,
+            onChanged: _setSendHwid,
+          ),
+        ),
+        ListItem(
+          title: TextFormField(
+            enabled: _sendHwid,
+            textInputAction: TextInputAction.next,
+            keyboardType: TextInputType.text,
+            controller: _hwidController,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: appLocalizations.xHwid,
+            ),
+            validator: (String? value) {
+              if (_sendHwid && (value == null || value.trim().isEmpty)) {
+                return appLocalizations.emptyTip(appLocalizations.xHwid);
+              }
+              return null;
+            },
           ),
         ),
         ListItem.switchItem(

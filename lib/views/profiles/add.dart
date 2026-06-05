@@ -27,7 +27,11 @@ class AddProfileView extends StatelessWidget {
   ) async {
     globalState.container
         .read(profilesActionProvider.notifier)
-        .addProfileFormURL(result.url, userAgent: result.userAgent);
+        .addProfileFormURL(
+          result.url,
+          userAgent: result.userAgent,
+          requestHeaders: result.requestHeaders,
+        );
   }
 
   Future<void> _toScan() async {
@@ -116,10 +120,12 @@ class AddProfileView extends StatelessWidget {
 class CustomSubscriptionFormResult {
   final String url;
   final String userAgent;
+  final Map<String, String> requestHeaders;
 
   const CustomSubscriptionFormResult({
     required this.url,
     required this.userAgent,
+    required this.requestHeaders,
   });
 }
 
@@ -137,6 +143,8 @@ class _CustomSubscriptionDialogState extends State<CustomSubscriptionDialog> {
   final _userAgentController = TextEditingController(
     text: defaultCustomSubscriptionUserAgent,
   );
+  final _hwidController = TextEditingController(text: snowflake.id.toString());
+  bool _sendHwid = true;
 
   Future<void> _handleSubmit() async {
     if (_formKey.currentState?.validate() == false) return;
@@ -146,14 +154,23 @@ class _CustomSubscriptionDialogState extends State<CustomSubscriptionDialog> {
         userAgent: _userAgentController.text.trim().takeFirstValid([
           defaultCustomSubscriptionUserAgent,
         ]),
+        requestHeaders: {if (_sendHwid) 'X-HWID': _hwidController.text.trim()},
       ),
     );
+  }
+
+  void _setSendHwid(bool value) {
+    if (_sendHwid == value) return;
+    setState(() {
+      _sendHwid = value;
+    });
   }
 
   @override
   void dispose() {
     _urlController.dispose();
     _userAgentController.dispose();
+    _hwidController.dispose();
     super.dispose();
   }
 
@@ -210,6 +227,28 @@ class _CustomSubscriptionDialogState extends State<CustomSubscriptionDialog> {
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return appLocalizations.emptyTip(appLocalizations.userAgent);
+                }
+                return null;
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _sendHwid,
+              onChanged: _setSendHwid,
+              title: Text(appLocalizations.xHwid),
+              subtitle: Text(appLocalizations.xHwidDesc),
+            ),
+            TextFormField(
+              enabled: _sendHwid,
+              controller: _hwidController,
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.xHwid,
+              ),
+              validator: (value) {
+                if (_sendHwid && (value == null || value.trim().isEmpty)) {
+                  return appLocalizations.emptyTip(appLocalizations.xHwid);
                 }
                 return null;
               },
