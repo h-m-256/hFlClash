@@ -187,6 +187,11 @@ class SubscriptionConverter {
         _applyWs(proxy, data['path']?.toString(), data['host']?.toString());
       } else if (network == 'grpc') {
         _applyGrpc(proxy, data['path']?.toString());
+      } else if (network == 'xhttp') {
+        _applyXhttp(
+          proxy,
+          data.map((key, value) => MapEntry(key, value?.toString() ?? '')),
+        );
       }
     }
     return proxy;
@@ -386,6 +391,8 @@ class SubscriptionConverter {
         proxy,
         _first(params, ['serviceName', 'service-name', 'grpc-service-name']),
       );
+    } else if (network == 'xhttp') {
+      _applyXhttp(proxy, params);
     } else if (network == 'h2') {
       final h2Opts = <String, dynamic>{};
       _put(h2Opts, 'path', params['path']);
@@ -406,6 +413,207 @@ class SubscriptionConverter {
   void _applyGrpc(Map<String, dynamic> proxy, String? serviceName) {
     if (serviceName == null || serviceName.isEmpty) return;
     proxy['grpc-opts'] = {'grpc-service-name': serviceName};
+  }
+
+  void _applyXhttp(Map<String, dynamic> proxy, Map<String, String> params) {
+    final opts = <String, dynamic>{};
+    _put(opts, 'path', params['path']);
+    _put(opts, 'host', _first(params, ['host', 'Host']));
+    _put(opts, 'mode', params['mode']);
+
+    final headers = _parseHeaders(params['headers']);
+    if (headers != null) {
+      opts['headers'] = headers;
+    }
+
+    _putTruthy(
+      opts,
+      'no-grpc-header',
+      _first(params, ['noGRPCHeader', 'no-grpc-header', 'noGrpcHeader']),
+    );
+    _put(
+      opts,
+      'x-padding-bytes',
+      _first(params, ['xPaddingBytes', 'x-padding-bytes']),
+    );
+    _putBoolIfPresent(
+      opts,
+      'x-padding-obfs-mode',
+      _first(params, ['xPaddingObfsMode', 'x-padding-obfs-mode']),
+    );
+    _put(
+      opts,
+      'x-padding-key',
+      _first(params, ['xPaddingKey', 'x-padding-key']),
+    );
+    _put(
+      opts,
+      'x-padding-header',
+      _first(params, ['xPaddingHeader', 'x-padding-header']),
+    );
+    _put(
+      opts,
+      'x-padding-placement',
+      _first(params, ['xPaddingPlacement', 'x-padding-placement']),
+    );
+    _put(
+      opts,
+      'x-padding-method',
+      _first(params, ['xPaddingMethod', 'x-padding-method']),
+    );
+    _put(
+      opts,
+      'uplink-http-method',
+      _first(params, ['uplinkHttpMethod', 'uplink-http-method']),
+    );
+    _put(
+      opts,
+      'session-placement',
+      _first(params, ['sessionPlacement', 'session-placement']),
+    );
+    _put(opts, 'session-key', _first(params, ['sessionKey', 'session-key']));
+    _put(
+      opts,
+      'seq-placement',
+      _first(params, ['seqPlacement', 'seq-placement']),
+    );
+    _put(opts, 'seq-key', _first(params, ['seqKey', 'seq-key']));
+    _put(
+      opts,
+      'uplink-data-placement',
+      _first(params, ['uplinkDataPlacement', 'uplink-data-placement']),
+    );
+    _put(
+      opts,
+      'uplink-data-key',
+      _first(params, ['uplinkDataKey', 'uplink-data-key']),
+    );
+    _putInt(
+      opts,
+      'uplink-chunk-size',
+      _first(params, ['uplinkChunkSize', 'uplink-chunk-size']),
+    );
+    _putInt(
+      opts,
+      'sc-max-each-post-bytes',
+      _first(params, ['scMaxEachPostBytes', 'sc-max-each-post-bytes']),
+    );
+    _putInt(
+      opts,
+      'sc-min-posts-interval-ms',
+      _first(params, ['scMinPostsIntervalMs', 'sc-min-posts-interval-ms']),
+    );
+
+    final extra = _parseJsonMap(params['extra']);
+    if (extra != null) {
+      _applyXhttpExtra(extra, opts);
+    }
+
+    proxy['xhttp-opts'] = opts;
+  }
+
+  void _applyXhttpExtra(Map<String, dynamic> extra, Map<String, dynamic> opts) {
+    if (extra['noGRPCHeader'] == true) {
+      opts['no-grpc-header'] = true;
+    }
+    _putDynamic(opts, 'x-padding-bytes', extra['xPaddingBytes']);
+    _putDynamic(opts, 'x-padding-obfs-mode', extra['xPaddingObfsMode']);
+    _putDynamic(opts, 'x-padding-key', extra['xPaddingKey']);
+    _putDynamic(opts, 'x-padding-header', extra['xPaddingHeader']);
+    _putDynamic(opts, 'x-padding-placement', extra['xPaddingPlacement']);
+    _putDynamic(opts, 'x-padding-method', extra['xPaddingMethod']);
+    _putDynamic(opts, 'uplink-http-method', extra['uplinkHttpMethod']);
+    _putDynamic(opts, 'session-placement', extra['sessionPlacement']);
+    _putDynamic(opts, 'session-key', extra['sessionKey']);
+    _putDynamic(opts, 'seq-placement', extra['seqPlacement']);
+    _putDynamic(opts, 'seq-key', extra['seqKey']);
+    _putDynamic(opts, 'uplink-data-placement', extra['uplinkDataPlacement']);
+    _putDynamic(opts, 'uplink-data-key', extra['uplinkDataKey']);
+    _putDynamic(opts, 'uplink-chunk-size', extra['uplinkChunkSize']);
+    _putDynamic(opts, 'sc-max-each-post-bytes', extra['scMaxEachPostBytes']);
+    _putDynamic(
+      opts,
+      'sc-min-posts-interval-ms',
+      extra['scMinPostsIntervalMs'],
+    );
+
+    final xmux = _asMap(extra['xmux']);
+    if (xmux != null) {
+      final reuseSettings = _xhttpReuseSettings(xmux);
+      if (reuseSettings.isNotEmpty) {
+        opts['reuse-settings'] = reuseSettings;
+      }
+    }
+
+    final downloadSettings = _xhttpDownloadSettings(
+      _asMap(extra['downloadSettings']),
+    );
+    if (downloadSettings != null) {
+      opts['download-settings'] = downloadSettings;
+    }
+  }
+
+  Map<String, dynamic>? _xhttpDownloadSettings(Map<String, dynamic>? data) {
+    if (data == null) return null;
+    final result = <String, dynamic>{};
+    _putDynamic(result, 'server', data['address']);
+    _putDynamic(result, 'port', data['port']);
+
+    final security = data['security']?.toString().toLowerCase();
+    if (security == 'tls' || security == 'reality') {
+      result['tls'] = true;
+      final tls = _asMap(data['tlsSettings']);
+      if (tls != null) {
+        _putDynamic(result, 'servername', tls['serverName']);
+        _putDynamic(result, 'client-fingerprint', tls['fingerprint']);
+        final alpn = _stringList(tls['alpn']);
+        if (alpn.isNotEmpty) result['alpn'] = alpn;
+        if (tls['allowInsecure'] == true) {
+          result['skip-cert-verify'] = true;
+        }
+      }
+      if (security == 'reality') {
+        final reality = _asMap(data['realitySettings']);
+        if (reality != null) {
+          final realityOpts = <String, dynamic>{};
+          _putDynamic(realityOpts, 'public-key', reality['publicKey']);
+          _putDynamic(realityOpts, 'short-id', reality['shortId']);
+          if (realityOpts.isNotEmpty) {
+            result['reality-opts'] = realityOpts;
+          }
+        }
+      }
+    }
+
+    final xhttp = _asMap(data['xhttpSettings']);
+    if (xhttp != null) {
+      _putDynamic(result, 'path', xhttp['path']);
+      _putDynamic(result, 'host', xhttp['host']);
+      final headers = _asStringMap(xhttp['headers']);
+      if (headers != null) result['headers'] = headers;
+
+      final extra = _asMap(xhttp['extra']);
+      final xmux = extra == null ? null : _asMap(extra['xmux']);
+      if (xmux != null) {
+        final reuseSettings = _xhttpReuseSettings(xmux);
+        if (reuseSettings.isNotEmpty) {
+          result['reuse-settings'] = reuseSettings;
+        }
+      }
+    }
+
+    return result.isEmpty ? null : result;
+  }
+
+  Map<String, dynamic> _xhttpReuseSettings(Map<String, dynamic> xmux) {
+    final result = <String, dynamic>{};
+    _putDynamic(result, 'max-connections', xmux['maxConnections']);
+    _putDynamic(result, 'max-concurrency', xmux['maxConcurrency']);
+    _putDynamic(result, 'c-max-reuse-times', xmux['cMaxReuseTimes']);
+    _putDynamic(result, 'h-max-request-times', xmux['hMaxRequestTimes']);
+    _putDynamic(result, 'h-max-reusable-secs', xmux['hMaxReusableSecs']);
+    _putDynamic(result, 'h-keep-alive-period', xmux['hKeepAlivePeriod']);
+    return result;
   }
 
   void _applyShadowsocksPlugin(Map<String, dynamic> proxy, String? plugin) {
@@ -524,6 +732,31 @@ class SubscriptionConverter {
     if (value != null && value.isNotEmpty) target[key] = value;
   }
 
+  void _putDynamic(Map<String, dynamic> target, String key, Object? value) {
+    if (value == null) return;
+    if (value is String && value.isEmpty) return;
+    target[key] = value;
+  }
+
+  void _putInt(Map<String, dynamic> target, String key, String? value) {
+    if (value == null || value.isEmpty) return;
+    final intValue = int.tryParse(value);
+    if (intValue != null) {
+      target[key] = intValue;
+    }
+  }
+
+  void _putBoolIfPresent(
+    Map<String, dynamic> target,
+    String key,
+    String? value,
+  ) {
+    final boolValue = _boolValue(value);
+    if (boolValue != null) {
+      target[key] = boolValue;
+    }
+  }
+
   void _putList(Map<String, dynamic> target, String key, String? value) {
     if (value == null || value.isEmpty) return;
     target[key] = value
@@ -537,11 +770,74 @@ class SubscriptionConverter {
     if (_truthy(value)) target[key] = true;
   }
 
+  Map<String, dynamic>? _parseJsonMap(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return _asMap(json.decode(value));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Map<String, String>? _parseHeaders(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      final headers = _asStringMap(json.decode(value));
+      if (headers != null) return headers;
+    } catch (_) {}
+
+    final headers = <String, String>{};
+    for (final item in value.split(RegExp(r'[,;|]'))) {
+      final separator = item.contains(':') ? ':' : '=';
+      final index = item.indexOf(separator);
+      if (index == -1) continue;
+      final key = item.substring(0, index).trim();
+      final headerValue = item.substring(index + 1).trim();
+      if (key.isNotEmpty && headerValue.isNotEmpty) {
+        headers[key] = headerValue;
+      }
+    }
+    return headers.isEmpty ? null : headers;
+  }
+
+  Map<String, dynamic>? _asMap(Object? value) {
+    if (value is! Map) return null;
+    return value.map((key, value) => MapEntry(key.toString(), value));
+  }
+
+  Map<String, String>? _asStringMap(Object? value) {
+    final map = _asMap(value);
+    if (map == null || map.isEmpty) return null;
+    return map.map((key, value) => MapEntry(key, value.toString()));
+  }
+
+  List<String> _stringList(Object? value) {
+    if (value is List) {
+      return value
+          .map((item) => item.toString())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    if (value is String) {
+      return value
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
+
   bool _truthy(String? value) {
-    if (value == null) return false;
+    return _boolValue(value) == true;
+  }
+
+  bool? _boolValue(String? value) {
+    if (value == null) return null;
     return switch (value.toLowerCase()) {
       '1' || 'true' || 'yes' || 'on' => true,
-      _ => false,
+      '0' || 'false' || 'no' || 'off' => false,
+      _ => null,
     };
   }
 }

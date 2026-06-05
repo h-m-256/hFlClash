@@ -90,5 +90,68 @@ void main() {
       expect(yaml, contains('name: "Valid"'));
       expect(yaml, isNot(contains('not-valid-base64')));
     });
+
+    test('converts vless grpc reality links', () {
+      final yaml = converter.convertTextIfNeeded(
+        'vless://00000000-0000-0000-0000-000000000000@example.com:443'
+        '?encryption=none&type=grpc&serviceName=gun&security=reality'
+        '&sni=example.org&fp=chrome&pbk=public-key&sid=short-id#GRPC',
+      );
+
+      expect(yaml, contains('network: "grpc"'));
+      expect(yaml, contains('grpc-opts:'));
+      expect(yaml, contains('grpc-service-name: "gun"'));
+      expect(yaml, contains('reality-opts:'));
+      expect(yaml, contains('public-key: "public-key"'));
+      expect(yaml, contains('short-id: "short-id"'));
+      expect(yaml, contains('client-fingerprint: "chrome"'));
+    });
+
+    test('converts vless xhttp transport options', () {
+      final extra = Uri.encodeComponent(
+        jsonEncode({
+          'noGRPCHeader': true,
+          'xPaddingBytes': '100-1000',
+          'sessionPlacement': 'path',
+          'xmux': {'maxConcurrency': '16-32'},
+          'downloadSettings': {
+            'address': 'download.example.com',
+            'port': 443,
+            'security': 'tls',
+            'tlsSettings': {
+              'serverName': 'download-sni.example',
+              'fingerprint': 'chrome',
+            },
+            'xhttpSettings': {
+              'path': '/download',
+              'host': 'download-host.example',
+            },
+          },
+        }),
+      );
+      final headers = Uri.encodeComponent(jsonEncode({'X-Test': '1'}));
+      final yaml = converter.convertTextIfNeeded(
+        'vless://00000000-0000-0000-0000-000000000000@example.com:443'
+        '?encryption=none&type=xhttp&security=tls&sni=sni.example'
+        '&path=%2Fxhttp&host=host.example&mode=stream-up'
+        '&headers=$headers&extra=$extra#XHTTP',
+      );
+
+      expect(yaml, contains('network: "xhttp"'));
+      expect(yaml, contains('xhttp-opts:'));
+      expect(yaml, contains('path: "/xhttp"'));
+      expect(yaml, contains('host: "host.example"'));
+      expect(yaml, contains('mode: "stream-up"'));
+      expect(yaml, contains('X-Test: "1"'));
+      expect(yaml, contains('no-grpc-header: true'));
+      expect(yaml, contains('x-padding-bytes: "100-1000"'));
+      expect(yaml, contains('session-placement: "path"'));
+      expect(yaml, contains('reuse-settings:'));
+      expect(yaml, contains('max-concurrency: "16-32"'));
+      expect(yaml, contains('download-settings:'));
+      expect(yaml, contains('server: "download.example.com"'));
+      expect(yaml, contains('servername: "download-sni.example"'));
+      expect(yaml, contains('path: "/download"'));
+    });
   });
 }
