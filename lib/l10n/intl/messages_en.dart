@@ -269,6 +269,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "createProfile": MessageLookupByLibrary.simpleMessage("Create Profile"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Creation time"),
     "custom": MessageLookupByLibrary.simpleMessage("Custom"),
+    "customSubscription": MessageLookupByLibrary.simpleMessage(
+      "Custom subscription",
+    ),
+    "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
+      "Convert share links locally and use a custom User-Agent",
+    ),
     "cut": MessageLookupByLibrary.simpleMessage("Cut"),
     "dark": MessageLookupByLibrary.simpleMessage("Dark"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
@@ -1006,6 +1012,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
+    "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
+    "userAgentDesc": MessageLookupByLibrary.simpleMessage(
+      "Sent when updating this subscription",
+    ),
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
     "view": MessageLookupByLibrary.simpleMessage("View"),

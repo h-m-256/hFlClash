@@ -494,6 +494,41 @@ class AppLocalizations {
     );
   }
 
+  /// `Custom subscription`
+  String get customSubscription {
+    return Intl.message(
+      'Custom subscription',
+      name: 'customSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Convert share links locally and use a custom User-Agent`
+  String get customSubscriptionDesc {
+    return Intl.message(
+      'Convert share links locally and use a custom User-Agent',
+      name: 'customSubscriptionDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `User-Agent`
+  String get userAgent {
+    return Intl.message('User-Agent', name: 'userAgent', desc: '', args: []);
+  }
+
+  /// `Sent when updating this subscription`
+  String get userAgentDesc {
+    return Intl.message(
+      'Sent when updating this subscription',
+      name: 'userAgentDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `File`
   String get file {
     return Intl.message('File', name: 'file', desc: '', args: []);

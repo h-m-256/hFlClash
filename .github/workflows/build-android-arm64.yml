@@ -1,0 +1,73 @@
+name: build-android-arm64
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_env:
+        description: Application environment
+        required: true
+        default: pre
+        type: choice
+        options:
+          - pre
+          - stable
+
+jobs:
+  build:
+    name: Build Android arm64 APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout submodules
+        run: |
+          git config --global url.https://github.com/.insteadOf git@github.com:
+          git submodule update --init --recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.0'
+          cache-dependency-path: core/go.sum
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.9
+          cache: true
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28c
+          add-to-path: true
+          link-to-sdk: true
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: dart setup.dart android --arch arm64 --env ${{ inputs.app_env }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hflclash-android-arm64-${{ inputs.app_env }}
+          path: |
+            dist/**/*.apk
+            build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error

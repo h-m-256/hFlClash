@@ -29,6 +29,7 @@ class EditProfileView extends StatefulWidget {
 class _EditProfileViewState extends State<EditProfileView> {
   late final TextEditingController _labelController;
   late final TextEditingController _urlController;
+  late final TextEditingController _userAgentController;
   late final TextEditingController _autoUpdateDurationController;
   late bool _autoUpdate;
   String? _rawText;
@@ -41,6 +42,9 @@ class _EditProfileViewState extends State<EditProfileView> {
     super.initState();
     _labelController = TextEditingController(text: widget.profile.label);
     _urlController = TextEditingController(text: widget.profile.url);
+    _userAgentController = TextEditingController(
+      text: widget.profile.userAgent ?? '',
+    );
     _autoUpdate = widget.profile.autoUpdate;
     _autoUpdateDurationController = TextEditingController(
       text: widget.profile.autoUpdateDuration.inMinutes.toString(),
@@ -65,6 +69,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     if (!_formKey.currentState!.validate()) return;
     var profile = widget.profile.copyWith(
       url: _urlController.text,
+      userAgent: _userAgentController.text.trim().value,
       label: _labelController.text,
       autoUpdate: _autoUpdate,
       autoUpdateDuration: Duration(
@@ -206,6 +211,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   void dispose() {
     _labelController.dispose();
     _urlController.dispose();
+    _userAgentController.dispose();
     _fileInfoNotifier.dispose();
     _autoUpdateDurationController.dispose();
     super.dispose();
@@ -248,11 +254,23 @@ class _EditProfileViewState extends State<EditProfileView> {
               if (value == null || value.isEmpty) {
                 return appLocalizations.profileUrlNullValidationDesc;
               }
-              if (!value.isUrl) {
+              if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
                 return appLocalizations.profileUrlInvalidValidationDesc;
               }
               return null;
             },
+          ),
+        ),
+        ListItem(
+          title: TextFormField(
+            textInputAction: TextInputAction.next,
+            keyboardType: TextInputType.text,
+            controller: _userAgentController,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: appLocalizations.userAgent,
+              helperText: appLocalizations.userAgentDesc,
+            ),
           ),
         ),
         ListItem.switchItem(

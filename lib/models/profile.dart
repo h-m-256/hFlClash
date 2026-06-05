@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -47,6 +48,7 @@ abstract class Profile with _$Profile {
     @Default('') String label,
     String? currentGroupName,
     @Default('') String url,
+    String? userAgent,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
     SubscriptionInfo? subscriptionInfo,
@@ -61,11 +63,12 @@ abstract class Profile with _$Profile {
   factory Profile.fromJson(Map<String, Object?> json) =>
       _$ProfileFromJson(json);
 
-  factory Profile.normal({String? label, String url = ''}) {
+  factory Profile.normal({String? label, String url = '', String? userAgent}) {
     final id = snowflake.id;
     return Profile(
       label: label ?? '',
       url: url,
+      userAgent: userAgent,
       id: id,
       autoUpdateDuration: defaultUpdateDuration,
     );
@@ -198,7 +201,15 @@ extension ProfileExtension on Profile {
   }
 
   Future<Profile> update() async {
-    final response = await request.getFileResponseForUrl(url);
+    if (subscriptionConverter.canConvert(url)) {
+      return copyWith(
+        label: label.takeFirstValid([id.toString()]),
+      ).saveFile(Uint8List.fromList(utf8.encode(url)));
+    }
+    final response = await request.getFileResponseForUrl(
+      url,
+      userAgent: userAgent?.trim().value,
+    );
     final disposition = response.headers.value('content-disposition');
     final userinfo = response.headers.value('subscription-userinfo');
     return copyWith(
@@ -213,7 +224,9 @@ extension ProfileExtension on Profile {
   Future<Profile> saveFile(Uint8List bytes) async {
     final path = await appPath.tempFilePath;
     final tempFile = File(path);
-    await tempFile.safeWriteAsBytes(bytes);
+    await tempFile.safeWriteAsBytes(
+      subscriptionConverter.convertBytesIfNeeded(bytes),
+    );
     final message = await coreController.validateConfig(path);
     if (message.isNotEmpty) {
       throw message;

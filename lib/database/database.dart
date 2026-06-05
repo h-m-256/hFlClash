@@ -33,7 +33,7 @@ class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -51,6 +51,9 @@ class Database extends _$Database {
           await m.createTable(iconRecords);
           await _resetOrders();
           await _migrateRules(m);
+        }
+        if (from < 3) {
+          await _migrateProfileUserAgent(m);
         }
       },
       beforeOpen: (details) async {
@@ -108,6 +111,16 @@ class Database extends _$Database {
     }
     await customStatement('ALTER TABLE rules DROP COLUMN value');
     await m.createIndex(idxRuleTarget);
+  }
+
+  Future<void> _migrateProfileUserAgent(Migrator m) async {
+    final tableInfo = await customSelect('PRAGMA table_info(profiles)').get();
+    final columnNames = tableInfo
+        .map((row) => row.read<String>('name'))
+        .toList();
+    if (!columnNames.contains('user_agent')) {
+      await m.addColumn(profiles, profiles.userAgent);
+    }
   }
 
   Future<void> _resetOrders() async {

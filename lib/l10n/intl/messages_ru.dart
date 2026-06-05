@@ -276,6 +276,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "createProfile": MessageLookupByLibrary.simpleMessage("Create Profile"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Время создания"),
     "custom": MessageLookupByLibrary.simpleMessage("Пользовательский"),
+    "customSubscription": MessageLookupByLibrary.simpleMessage(
+      "Нестандартная подписка",
+    ),
+    "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
+      "Локальная конвертация ссылок и отдельный User-Agent",
+    ),
     "cut": MessageLookupByLibrary.simpleMessage("Вырезать"),
     "dark": MessageLookupByLibrary.simpleMessage("Темный"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Панель управления"),
@@ -1068,6 +1074,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системные hosts",
+    ),
+    "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
+    "userAgentDesc": MessageLookupByLibrary.simpleMessage(
+      "Отправляется при обновлении этой подписки",
     ),
     "value": MessageLookupByLibrary.simpleMessage("Значение"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Яркие"),

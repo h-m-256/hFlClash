@@ -22,6 +22,14 @@ class AddProfileView extends StatelessWidget {
         .addProfileFormURL(url);
   }
 
+  Future<void> _handleAddCustomSubscription(
+    CustomSubscriptionFormResult result,
+  ) async {
+    globalState.container
+        .read(profilesActionProvider.notifier)
+        .addProfileFormURL(result.url, userAgent: result.userAgent);
+  }
+
   Future<void> _toScan() async {
     if (system.isDesktop) {
       globalState.container
@@ -49,7 +57,7 @@ class AddProfileView extends StatelessWidget {
           if (value == null || value.isEmpty) {
             return appLocalizations.emptyTip('').trim();
           }
-          if (!value.isUrl) {
+          if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
             return appLocalizations.urlTip('').trim();
           }
           return null;
@@ -58,6 +66,16 @@ class AddProfileView extends StatelessWidget {
     );
     if (url != null) {
       _handleAddProfileFormURL(url);
+    }
+  }
+
+  Future<void> _toAddCustomSubscription() async {
+    final result = await globalState
+        .showCommonDialog<CustomSubscriptionFormResult>(
+          child: const CustomSubscriptionDialog(),
+        );
+    if (result != null) {
+      _handleAddCustomSubscription(result);
     }
   }
 
@@ -84,7 +102,121 @@ class AddProfileView extends StatelessWidget {
           subtitle: Text(appLocalizations.urlDesc),
           onTap: _toAdd,
         ),
+        ListItem(
+          leading: const Icon(Icons.extension_sharp),
+          title: Text(appLocalizations.customSubscription),
+          subtitle: Text(appLocalizations.customSubscriptionDesc),
+          onTap: _toAddCustomSubscription,
+        ),
       ],
+    );
+  }
+}
+
+class CustomSubscriptionFormResult {
+  final String url;
+  final String userAgent;
+
+  const CustomSubscriptionFormResult({
+    required this.url,
+    required this.userAgent,
+  });
+}
+
+class CustomSubscriptionDialog extends StatefulWidget {
+  const CustomSubscriptionDialog({super.key});
+
+  @override
+  State<CustomSubscriptionDialog> createState() =>
+      _CustomSubscriptionDialogState();
+}
+
+class _CustomSubscriptionDialogState extends State<CustomSubscriptionDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _urlController = TextEditingController();
+  final _userAgentController = TextEditingController(
+    text: defaultCustomSubscriptionUserAgent,
+  );
+
+  Future<void> _handleSubmit() async {
+    if (_formKey.currentState?.validate() == false) return;
+    Navigator.of(context).pop(
+      CustomSubscriptionFormResult(
+        url: _urlController.text.trim(),
+        userAgent: _userAgentController.text.trim().takeFirstValid([
+          defaultCustomSubscriptionUserAgent,
+        ]),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _userAgentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = context.appLocalizations;
+    return CommonDialog(
+      title: appLocalizations.customSubscription,
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text(appLocalizations.cancel),
+        ),
+        TextButton(
+          onPressed: _handleSubmit,
+          child: Text(appLocalizations.submit),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUnfocus,
+        child: Wrap(
+          runSpacing: 16,
+          children: [
+            TextFormField(
+              controller: _urlController,
+              keyboardType: TextInputType.url,
+              maxLines: 5,
+              minLines: 1,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.url,
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return appLocalizations.emptyTip('').trim();
+                }
+                if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
+                  return appLocalizations.urlTip('').trim();
+                }
+                return null;
+              },
+            ),
+            TextFormField(
+              controller: _userAgentController,
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.userAgent,
+                helperText: appLocalizations.userAgentDesc,
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return appLocalizations.emptyTip(appLocalizations.userAgent);
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
