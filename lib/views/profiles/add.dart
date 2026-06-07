@@ -31,6 +31,7 @@ class AddProfileView extends StatelessWidget {
           result.url,
           userAgent: result.userAgent,
           requestHeaders: result.requestHeaders,
+          convertSubscription: true,
         );
   }
 
@@ -61,7 +62,7 @@ class AddProfileView extends StatelessWidget {
           if (value == null || value.isEmpty) {
             return appLocalizations.emptyTip('').trim();
           }
-          if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
+          if (!value.isUrl) {
             return appLocalizations.urlTip('').trim();
           }
           return null;

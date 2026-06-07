@@ -76,6 +76,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       url: _urlController.text,
       userAgent: _userAgentController.text.trim().value,
       requestHeaders: _buildRequestHeaders(),
+      convertSubscription: _showSubscriptionOptions,
       label: _labelController.text,
       autoUpdate: _autoUpdate,
       autoUpdateDuration: Duration(
@@ -148,6 +149,13 @@ class _EditProfileViewState extends State<EditProfileView> {
       headers['X-HWID'] = _hwidController.text.trim();
     }
     return headers;
+  }
+
+  bool get _showSubscriptionOptions {
+    return widget.profile.convertSubscription ||
+        widget.profile.sourceType != null ||
+        widget.profile.userAgent != null ||
+        widget.profile.requestHeaders.isNotEmpty;
   }
 
   String _sourceTypeLabel(
@@ -304,7 +312,9 @@ class _EditProfileViewState extends State<EditProfileView> {
               if (value == null || value.isEmpty) {
                 return appLocalizations.profileUrlNullValidationDesc;
               }
-              if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
+              if (!value.isUrl &&
+                  (_showSubscriptionOptions == false ||
+                      !subscriptionConverter.canConvert(value))) {
                 return appLocalizations.profileUrlInvalidValidationDesc;
               }
               return null;
@@ -318,44 +328,47 @@ class _EditProfileViewState extends State<EditProfileView> {
               _sourceTypeLabel(context, widget.profile.sourceType!),
             ),
           ),
-        ListItem(
-          title: TextFormField(
-            textInputAction: TextInputAction.next,
-            keyboardType: TextInputType.text,
-            controller: _userAgentController,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: appLocalizations.userAgent,
-              helperText: appLocalizations.userAgentDesc,
+        if (_showSubscriptionOptions)
+          ListItem(
+            title: TextFormField(
+              textInputAction: TextInputAction.next,
+              keyboardType: TextInputType.text,
+              controller: _userAgentController,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.userAgent,
+                helperText: appLocalizations.userAgentDesc,
+              ),
             ),
           ),
-        ),
-        ListItem.switchItem(
-          title: Text(appLocalizations.xHwid),
-          subtitle: Text(appLocalizations.xHwidDesc),
-          delegate: SwitchDelegate<bool>(
-            value: _sendHwid,
-            onChanged: _setSendHwid,
-          ),
-        ),
-        ListItem(
-          title: TextFormField(
-            enabled: _sendHwid,
-            textInputAction: TextInputAction.next,
-            keyboardType: TextInputType.text,
-            controller: _hwidController,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: appLocalizations.xHwid,
+        if (_showSubscriptionOptions)
+          ListItem.switchItem(
+            title: Text(appLocalizations.xHwid),
+            subtitle: Text(appLocalizations.xHwidDesc),
+            delegate: SwitchDelegate<bool>(
+              value: _sendHwid,
+              onChanged: _setSendHwid,
             ),
-            validator: (String? value) {
-              if (_sendHwid && (value == null || value.trim().isEmpty)) {
-                return appLocalizations.emptyTip(appLocalizations.xHwid);
-              }
-              return null;
-            },
           ),
-        ),
+        if (_showSubscriptionOptions)
+          ListItem(
+            title: TextFormField(
+              enabled: _sendHwid,
+              textInputAction: TextInputAction.next,
+              keyboardType: TextInputType.text,
+              controller: _hwidController,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.xHwid,
+              ),
+              validator: (String? value) {
+                if (_sendHwid && (value == null || value.trim().isEmpty)) {
+                  return appLocalizations.emptyTip(appLocalizations.xHwid);
+                }
+                return null;
+              },
+            ),
+          ),
         ListItem.switchItem(
           title: Text(appLocalizations.autoUpdate),
           delegate: SwitchDelegate<bool>(

@@ -33,7 +33,7 @@ class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -57,6 +57,9 @@ class Database extends _$Database {
         }
         if (from < 4) {
           await _migrateProfileSubscriptionMetadata(m);
+        }
+        if (from < 5) {
+          await _migrateProfileConvertSubscription(m);
         }
       },
       beforeOpen: (details) async {
@@ -136,6 +139,16 @@ class Database extends _$Database {
     }
     if (!columnNames.contains('source_type')) {
       await m.addColumn(profiles, profiles.sourceType);
+    }
+  }
+
+  Future<void> _migrateProfileConvertSubscription(Migrator m) async {
+    final tableInfo = await customSelect('PRAGMA table_info(profiles)').get();
+    final columnNames = tableInfo
+        .map((row) => row.read<String>('name'))
+        .toList();
+    if (!columnNames.contains('convert_subscription')) {
+      await m.addColumn(profiles, profiles.convertSubscription);
     }
   }
 

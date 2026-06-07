@@ -19,6 +19,9 @@ class Profiles extends Table {
       .map(const StringMapConverter())
       .withDefault(const Constant('{}'))();
 
+  BoolColumn get convertSubscription =>
+      boolean().withDefault(const Constant(false))();
+
   TextColumn get sourceType => textEnum<SubscriptionSourceType>().nullable()();
 
   DateTimeColumn get lastUpdateDate => dateTime().nullable()();
@@ -121,6 +124,7 @@ extension RawProfilExt on RawProfile {
       url: url,
       userAgent: userAgent,
       requestHeaders: requestHeaders,
+      convertSubscription: convertSubscription,
       sourceType: sourceType,
       lastUpdateDate: lastUpdateDate,
       autoUpdateDuration: Duration(milliseconds: autoUpdateDurationMillis),
@@ -144,6 +148,7 @@ extension ProfilesCompanionExt on Profile {
       url: url,
       userAgent: Value(userAgent),
       requestHeaders: Value(requestHeaders),
+      convertSubscription: Value(convertSubscription),
       sourceType: Value(sourceType),
       lastUpdateDate: Value(lastUpdateDate),
       autoUpdateDurationMillis: autoUpdateDuration.inMilliseconds,

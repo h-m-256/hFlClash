@@ -63,10 +63,7 @@ void main() {
       final bytes = Uint8List.fromList(utf8.encode(clashYaml));
 
       expect(converter.convertBytesIfNeeded(bytes), bytes);
-      expect(
-        converter.convertBytes(bytes).sourceType,
-        SubscriptionSourceType.clashYaml,
-      );
+      expect(converter.convertBytes(bytes).sourceType, isNull);
     });
 
     test('deduplicates proxy names', () {

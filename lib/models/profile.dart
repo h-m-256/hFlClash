@@ -50,6 +50,7 @@ abstract class Profile with _$Profile {
     @Default('') String url,
     String? userAgent,
     @Default({}) Map<String, String> requestHeaders,
+    @Default(false) bool convertSubscription,
     SubscriptionSourceType? sourceType,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
@@ -70,6 +71,7 @@ abstract class Profile with _$Profile {
     String url = '',
     String? userAgent,
     Map<String, String> requestHeaders = const {},
+    bool convertSubscription = false,
   }) {
     final id = snowflake.id;
     return Profile(
@@ -77,6 +79,7 @@ abstract class Profile with _$Profile {
       url: url,
       userAgent: userAgent,
       requestHeaders: requestHeaders,
+      convertSubscription: convertSubscription,
       id: id,
       autoUpdateDuration: defaultUpdateDuration,
     );
@@ -209,7 +212,7 @@ extension ProfileExtension on Profile {
   }
 
   Future<Profile> update() async {
-    if (subscriptionConverter.canConvert(url)) {
+    if (convertSubscription && subscriptionConverter.canConvert(url)) {
       return copyWith(
         label: label.takeFirstValid([id.toString()]),
       ).saveFile(Uint8List.fromList(utf8.encode(url)));
@@ -233,7 +236,9 @@ extension ProfileExtension on Profile {
   Future<Profile> saveFile(Uint8List bytes) async {
     final path = await appPath.tempFilePath;
     final tempFile = File(path);
-    final converted = subscriptionConverter.convertBytes(bytes);
+    final converted = convertSubscription
+        ? subscriptionConverter.convertBytes(bytes)
+        : SubscriptionConversionResult(bytes: bytes);
     await tempFile.safeWriteAsBytes(converted.bytes);
     final message = await coreController.validateConfig(path);
     if (message.isNotEmpty) {
@@ -244,7 +249,9 @@ extension ProfileExtension on Profile {
     await tempFile.safeDelete();
     return copyWith(
       lastUpdateDate: DateTime.now(),
-      sourceType: converted.sourceType ?? sourceType,
+      sourceType: convertSubscription
+          ? converted.sourceType ?? sourceType
+          : null,
     );
   }
 

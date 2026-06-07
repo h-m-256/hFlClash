@@ -27,6 +27,10 @@ class SubscriptionConverter {
     r'(?:(?:vless|vmess|trojan|ss|hysteria2|hy2|hysteria|tuic)://)[^\s]+',
     caseSensitive: false,
   );
+  static final _linkSchemeRegExp = RegExp(
+    r'(?:vless|vmess|trojan|ss|hysteria2|hy2|hysteria|tuic)://',
+    caseSensitive: false,
+  );
   static final _clashYamlRegExp = RegExp(
     r'^\s*(proxies|proxy-groups|proxy-providers|rules):\s*',
     multiLine: true,
@@ -40,12 +44,7 @@ class SubscriptionConverter {
     final content = utf8.decode(bytes, allowMalformed: true);
     final converted = convertText(content);
     if (converted == null) {
-      return SubscriptionConversionResult(
-        bytes: bytes,
-        sourceType: _isClashYaml(_normalizeText(content))
-            ? SubscriptionSourceType.clashYaml
-            : null,
-      );
+      return SubscriptionConversionResult(bytes: bytes, sourceType: null);
     }
     return SubscriptionConversionResult(
       bytes: Uint8List.fromList(utf8.encode(converted.content)),
@@ -298,34 +297,60 @@ class SubscriptionConverter {
   }
 
   List<String> _extractLinks(String content) {
-    return _linkRegExp
-        .allMatches(content)
-        .map(
-          (match) => match
-              .group(0)!
-              .trim()
-              .trimRightChar(',')
-              .replaceAll('&amp;', '&'),
-        )
-        .toList();
+    final links = <String>[];
+    for (final line in content.split(RegExp(r'\r?\n'))) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) continue;
+      final matches = _linkSchemeRegExp.allMatches(trimmed).toList();
+      if (matches.isEmpty) continue;
+      for (var i = 0; i < matches.length; i++) {
+        final start = matches[i].start;
+        final end = i + 1 < matches.length
+            ? matches[i + 1].start
+            : trimmed.length;
+        links.add(_normalizeLinkText(trimmed.substring(start, end)));
+      }
+    }
+    if (links.isNotEmpty) return links;
+    return _linkRegExp.allMatches(content).map((match) {
+      return _normalizeLinkText(match.group(0)!);
+    }).toList();
+  }
+
+  String _normalizeLinkText(String link) {
+    return link.trim().trimRightChar(',').replaceAll('&amp;', '&');
   }
 
   Map<String, dynamic>? _parseLink(String link) {
-    final scheme = link.split('://').first.toLowerCase();
+    final normalizedLink = _normalizeLinkForUri(link);
+    final scheme = normalizedLink.split('://').first.toLowerCase();
     try {
       return switch (scheme) {
-        'vless' => _parseVless(link),
-        'vmess' => _parseVmess(link),
-        'trojan' => _parseTrojan(link),
-        'ss' => _parseShadowsocks(link),
-        'hysteria2' || 'hy2' => _parseHysteria2(link),
-        'hysteria' => _parseHysteria(link),
-        'tuic' => _parseTuic(link),
+        'vless' => _parseVless(normalizedLink),
+        'vmess' => _parseVmess(normalizedLink),
+        'trojan' => _parseTrojan(normalizedLink),
+        'ss' => _parseShadowsocks(normalizedLink),
+        'hysteria2' || 'hy2' => _parseHysteria2(normalizedLink),
+        'hysteria' => _parseHysteria(normalizedLink),
+        'tuic' => _parseTuic(normalizedLink),
         _ => null,
       };
     } catch (_) {
       return null;
     }
+  }
+
+  String _normalizeLinkForUri(String link) {
+    final index = link.indexOf('#');
+    if (index == -1) return link;
+    final fragment = link.substring(index + 1);
+    String decoded;
+    try {
+      decoded = Uri.decodeComponent(fragment);
+    } catch (_) {
+      decoded = fragment;
+    }
+    return '${link.substring(0, index)}#${Uri.encodeComponent(decoded)}';
   }
 
   Map<String, dynamic>? _parseVless(String link) {
@@ -797,9 +822,13 @@ class SubscriptionConverter {
     _putDynamic(opts, 'seq-key', extra['seqKey']);
     _putDynamic(opts, 'uplink-data-placement', extra['uplinkDataPlacement']);
     _putDynamic(opts, 'uplink-data-key', extra['uplinkDataKey']);
-    _putDynamic(opts, 'uplink-chunk-size', extra['uplinkChunkSize']);
-    _putDynamic(opts, 'sc-max-each-post-bytes', extra['scMaxEachPostBytes']);
-    _putDynamic(
+    _putPositiveDynamic(opts, 'uplink-chunk-size', extra['uplinkChunkSize']);
+    _putPositiveDynamic(
+      opts,
+      'sc-max-each-post-bytes',
+      extra['scMaxEachPostBytes'],
+    );
+    _putPositiveDynamic(
       opts,
       'sc-min-posts-interval-ms',
       extra['scMinPostsIntervalMs'],
@@ -1038,7 +1067,18 @@ class SubscriptionConverter {
   void _putInt(Map<String, dynamic> target, String key, String? value) {
     if (value == null || value.isEmpty) return;
     final intValue = int.tryParse(value);
-    if (intValue != null) {
+    if (intValue != null && intValue > 0) {
+      target[key] = intValue;
+    }
+  }
+
+  void _putPositiveDynamic(
+    Map<String, dynamic> target,
+    String key,
+    Object? value,
+  ) {
+    final intValue = _intValue(value);
+    if (intValue != null && intValue > 0) {
       target[key] = intValue;
     }
   }

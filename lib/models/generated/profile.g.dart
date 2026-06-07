@@ -33,6 +33,7 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
         (k, e) => MapEntry(k, e as String),
       ) ??
       const {},
+  convertSubscription: json['convertSubscription'] as bool? ?? false,
   sourceType: $enumDecodeNullable(
     _$SubscriptionSourceTypeEnumMap,
     json['sourceType'],
@@ -71,6 +72,7 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'url': instance.url,
   'userAgent': instance.userAgent,
   'requestHeaders': instance.requestHeaders,
+  'convertSubscription': instance.convertSubscription,
   'sourceType': _$SubscriptionSourceTypeEnumMap[instance.sourceType],
   'lastUpdateDate': instance.lastUpdateDate?.toIso8601String(),
   'autoUpdateDuration': instance.autoUpdateDuration.inMicroseconds,

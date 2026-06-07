@@ -930,6 +930,7 @@ class ProfilesAction extends _$ProfilesAction {
     String url, {
     String? userAgent,
     Map<String, String> requestHeaders = const {},
+    bool convertSubscription = false,
   }) async {
     if (globalState.navigatorKey.currentState?.canPop() ?? false) {
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -942,6 +943,7 @@ class ProfilesAction extends _$ProfilesAction {
           url: url,
           userAgent: userAgent,
           requestHeaders: requestHeaders,
+          convertSubscription: convertSubscription,
         ).update();
       },
       title: currentAppLocalizations.addProfile,
