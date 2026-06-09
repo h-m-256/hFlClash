@@ -5,20 +5,30 @@ import 'yaml.dart';
 
 enum SubscriptionSourceType { clashYaml, shareLinks, base64Links, happJson }
 
+const maxConvertedSubscriptionProxies = 5000;
+const maxConvertedSubscriptionCandidates = 30000;
+
 class SubscriptionConversionResult {
   final Uint8List bytes;
   final SubscriptionSourceType? sourceType;
+  final Map<String, String> proxyLinks;
 
-  const SubscriptionConversionResult({required this.bytes, this.sourceType});
+  const SubscriptionConversionResult({
+    required this.bytes,
+    this.sourceType,
+    this.proxyLinks = const {},
+  });
 }
 
 class SubscriptionTextConversionResult {
   final String content;
   final SubscriptionSourceType sourceType;
+  final Map<String, String> proxyLinks;
 
   const SubscriptionTextConversionResult({
     required this.content,
     required this.sourceType,
+    this.proxyLinks = const {},
   });
 }
 
@@ -36,27 +46,56 @@ class SubscriptionConverter {
     multiLine: true,
   );
 
-  Uint8List convertBytesIfNeeded(Uint8List bytes) {
-    return convertBytes(bytes).bytes;
+  Uint8List convertBytesIfNeeded(
+    Uint8List bytes, {
+    Set<String> favoriteProxyNames = const {},
+    Map<String, String> protectedProxyLinks = const {},
+  }) {
+    return convertBytes(
+      bytes,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    ).bytes;
   }
 
-  SubscriptionConversionResult convertBytes(Uint8List bytes) {
+  SubscriptionConversionResult convertBytes(
+    Uint8List bytes, {
+    Set<String> favoriteProxyNames = const {},
+    Map<String, String> protectedProxyLinks = const {},
+  }) {
     final content = utf8.decode(bytes, allowMalformed: true);
-    final converted = convertText(content);
+    final converted = convertText(
+      content,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    );
     if (converted == null) {
       return SubscriptionConversionResult(bytes: bytes, sourceType: null);
     }
     return SubscriptionConversionResult(
       bytes: Uint8List.fromList(utf8.encode(converted.content)),
       sourceType: converted.sourceType,
+      proxyLinks: converted.proxyLinks,
     );
   }
 
-  String? convertTextIfNeeded(String content) {
-    return convertText(content)?.content;
+  String? convertTextIfNeeded(
+    String content, {
+    Set<String> favoriteProxyNames = const {},
+    Map<String, String> protectedProxyLinks = const {},
+  }) {
+    return convertText(
+      content,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    )?.content;
   }
 
-  SubscriptionTextConversionResult? convertText(String content) {
+  SubscriptionTextConversionResult? convertText(
+    String content, {
+    Set<String> favoriteProxyNames = const {},
+    Map<String, String> protectedProxyLinks = const {},
+  }) {
     final normalized = _normalizeText(content);
     if (normalized.isEmpty || _isClashYaml(normalized)) return null;
 
@@ -65,7 +104,12 @@ class SubscriptionConverter {
 
     final rawLinks = _extractLinks(normalized);
     if (rawLinks.isNotEmpty) {
-      return _convertLinks(rawLinks, SubscriptionSourceType.shareLinks);
+      return _convertLinks(
+        rawLinks,
+        SubscriptionSourceType.shareLinks,
+        favoriteProxyNames: favoriteProxyNames,
+        protectedProxyLinks: protectedProxyLinks,
+      );
     }
 
     final decoded = _decodeWholeBase64(normalized);
@@ -76,27 +120,89 @@ class SubscriptionConverter {
 
     final links = _extractLinks(decoded);
     if (links.isEmpty) return null;
-    return _convertLinks(links, SubscriptionSourceType.base64Links);
+    return _convertLinks(
+      links,
+      SubscriptionSourceType.base64Links,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    );
   }
 
   SubscriptionTextConversionResult? _convertLinks(
     List<String> links,
-    SubscriptionSourceType sourceType,
-  ) {
-    final proxies = <Map<String, dynamic>>[];
+    SubscriptionSourceType sourceType, {
+    Set<String> favoriteProxyNames = const {},
+    Map<String, String> protectedProxyLinks = const {},
+  }) {
+    final entries = <_ProxyEntry>[];
+    var candidates = 0;
     for (final link in links) {
+      candidates += 1;
+      if (candidates > maxConvertedSubscriptionCandidates ||
+          entries.length >= maxConvertedSubscriptionProxies) {
+        break;
+      }
       final proxy = _parseLink(link);
       if (proxy != null) {
-        proxies.add(proxy);
+        entries.add(_ProxyEntry(proxy: proxy, link: link));
       }
     }
-    if (proxies.isEmpty) {
+    if (entries.isEmpty) {
       throw 'Unsupported subscription links';
     }
 
-    return SubscriptionTextConversionResult(
-      content: _buildConfig(proxies),
+    return _buildLinkResult(
+      entries,
       sourceType: sourceType,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    );
+  }
+
+  SubscriptionTextConversionResult _buildLinkResult(
+    List<_ProxyEntry> entries, {
+    required SubscriptionSourceType sourceType,
+    required Set<String> favoriteProxyNames,
+    required Map<String, String> protectedProxyLinks,
+  }) {
+    final normalProxies = entries.map((entry) => entry.proxy).toList();
+    _ensureUniqueNames(normalProxies);
+    final normalNames = normalProxies
+        .map((proxy) => proxy['name'] as String)
+        .toSet();
+    final normalLinks = entries.map((entry) => entry.link).toSet();
+
+    final protectedEntries = <_ProxyEntry>[];
+    for (final item in protectedProxyLinks.entries) {
+      if (normalNames.contains(item.key) || normalLinks.contains(item.value)) {
+        continue;
+      }
+      final proxy = _parseLink(item.value);
+      if (proxy == null) continue;
+      proxy['name'] = item.key;
+      protectedEntries.add(_ProxyEntry(proxy: proxy, link: item.value));
+    }
+
+    final allEntries = [...protectedEntries, ...entries];
+    final favoriteNames = {...favoriteProxyNames, ...protectedProxyLinks.keys};
+    final orderedEntries = [
+      ...allEntries.where((entry) {
+        return favoriteNames.contains(entry.proxy['name']);
+      }),
+      ...allEntries.where((entry) {
+        return !favoriteNames.contains(entry.proxy['name']);
+      }),
+    ];
+    final proxyLinks = <String, String>{
+      for (final entry in orderedEntries)
+        entry.proxy['name'] as String: entry.link,
+    };
+    return SubscriptionTextConversionResult(
+      content: _buildConfig(
+        orderedEntries.map((entry) => entry.proxy).toList(),
+      ),
+      sourceType: sourceType,
+      proxyLinks: proxyLinks,
     );
   }
 
@@ -309,16 +415,28 @@ class SubscriptionConverter {
             ? matches[i + 1].start
             : trimmed.length;
         links.add(_normalizeLinkText(trimmed.substring(start, end)));
+        if (links.length >= maxConvertedSubscriptionCandidates) return links;
       }
     }
     if (links.isNotEmpty) return links;
-    return _linkRegExp.allMatches(content).map((match) {
-      return _normalizeLinkText(match.group(0)!);
-    }).toList();
+    return _linkRegExp
+        .allMatches(content)
+        .map((match) {
+          return _normalizeLinkText(match.group(0)!);
+        })
+        .take(maxConvertedSubscriptionCandidates)
+        .toList();
   }
 
   String _normalizeLinkText(String link) {
-    return link.trim().trimRightChar(',').replaceAll('&amp;', '&');
+    return link
+        .trim()
+        .trimRightChar(',')
+        .replaceFirstMapped(
+          RegExp(r'^([a-z0-9]+://)\s+', caseSensitive: false),
+          (match) => match.group(1)!,
+        )
+        .replaceAll('&amp;', '&');
   }
 
   Map<String, dynamic>? _parseLink(String link) {
@@ -359,7 +477,7 @@ class SubscriptionConverter {
     final params = uri!.queryParameters;
     final port = _port(uri);
     final uuid = _decode(uri.userInfo);
-    if (port == null || uuid.isEmpty) return null;
+    if (port == null || !_isUuidLike(uuid)) return null;
 
     final proxy = <String, dynamic>{
       'name': _name(uri, 'vless-${uri.host}:$port'),
@@ -1010,6 +1128,13 @@ class SubscriptionConverter {
     return uri != null && uri.host.isNotEmpty;
   }
 
+  bool _isUuidLike(String value) {
+    return RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false,
+    ).hasMatch(value);
+  }
+
   int? _port(Uri uri) {
     return uri.hasPort ? uri.port : null;
   }
@@ -1203,6 +1328,13 @@ class _ParsedShadowsocks {
     required this.server,
     required this.port,
   });
+}
+
+class _ProxyEntry {
+  final Map<String, dynamic> proxy;
+  final String link;
+
+  const _ProxyEntry({required this.proxy, required this.link});
 }
 
 extension on String {

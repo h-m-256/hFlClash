@@ -9,11 +9,12 @@ void main() {
     final converter = SubscriptionConverter();
 
     test('converts vless share links to mihomo yaml', () {
-      final yaml = converter.convertTextIfNeeded(
+      final converted = converter.convertText(
         'vless://00000000-0000-0000-0000-000000000000@example.com:443'
         '?encryption=none&security=tls&sni=sni.example&type=ws'
         '&host=cdn.example&path=%2Fws&fp=chrome#VLESS%20WS',
       );
+      final yaml = converted?.content;
 
       expect(yaml, isNotNull);
       expect(yaml, contains('type: "vless"'));
@@ -23,6 +24,21 @@ void main() {
       expect(yaml, contains('network: "ws"'));
       expect(yaml, contains('Host: "cdn.example"'));
       expect(yaml, contains('rules:'));
+      expect(
+        converted?.proxyLinks['VLESS WS'],
+        startsWith('vless://00000000-0000-0000-0000-000000000000@'),
+      );
+    });
+
+    test('normalizes whitespace after share link scheme', () {
+      final yaml = converter.convertTextIfNeeded(
+        'vless:// 00000000-0000-0000-0000-000000000000@example.com:443'
+        '?encryption=none&type=tcp#Spaced',
+      );
+
+      expect(yaml, isNotNull);
+      expect(yaml, contains('name: "Spaced"'));
+      expect(yaml, contains('server: "example.com"'));
     });
 
     test('converts hysteria2 share links to mihomo yaml', () {
@@ -88,12 +104,56 @@ void main() {
       final yaml = converter.convertTextIfNeeded(
         'vmess://not-valid-base64\n'
         'ss://d_91Ohw=#Broken\n'
+        'vless://not-a-uuid@example.com:443#BrokenVless\n'
         'hysteria2://secret@example.com:443#Valid',
       );
 
       expect(yaml, contains('name: "Valid"'));
       expect(yaml, isNot(contains('not-valid-base64')));
       expect(yaml, isNot(contains('Broken')));
+      expect(yaml, isNot(contains('BrokenVless')));
+    });
+
+    test('limits very large share link subscriptions', () {
+      final links = List.generate(maxConvertedSubscriptionProxies + 10, (
+        index,
+      ) {
+        final suffix = index.toString().padLeft(12, '0');
+        return 'vless://00000000-0000-0000-0000-$suffix@example$index.com:443'
+            '?encryption=none&type=tcp#Node$index';
+      }).join('\n');
+
+      final converted = converter.convertText(links);
+
+      expect(converted?.proxyLinks.length, maxConvertedSubscriptionProxies);
+      expect(converted?.content, contains('name: "Node0"'));
+      expect(
+        converted?.content,
+        isNot(contains('name: "Node$maxConvertedSubscriptionProxies"')),
+      );
+    });
+
+    test('re-injects protected favorite links and orders favorites first', () {
+      const currentLink =
+          'vless://00000000-0000-0000-0000-000000000001@current.example:443'
+          '?encryption=none&type=tcp#Current';
+      const protectedLink =
+          'vless://00000000-0000-0000-0000-000000000002@old.example:443'
+          '?encryption=none&type=tcp#Old';
+
+      final converted = converter.convertText(
+        currentLink,
+        favoriteProxyNames: {'Current'},
+        protectedProxyLinks: {'Old': protectedLink},
+      );
+      final yaml = converted?.content;
+
+      expect(converted?.proxyLinks['Old'], protectedLink);
+      expect(yaml, contains('server: "old.example"'));
+      expect(
+        yaml!.indexOf('name: "Old"'),
+        lessThan(yaml.indexOf('name: "Current"')),
+      );
     });
 
     test('normalizes html escaped query separators', () {

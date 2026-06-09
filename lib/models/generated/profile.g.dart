@@ -38,6 +38,21 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
     _$SubscriptionSourceTypeEnumMap,
     json['sourceType'],
   ),
+  proxyLinks:
+      (json['proxyLinks'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
+  favoriteProxyNames:
+      (json['favoriteProxyNames'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toSet() ??
+      const {},
+  protectedProxyLinks:
+      (json['protectedProxyLinks'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      const {},
   lastUpdateDate: json['lastUpdateDate'] == null
       ? null
       : DateTime.parse(json['lastUpdateDate'] as String),
@@ -74,6 +89,9 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'requestHeaders': instance.requestHeaders,
   'convertSubscription': instance.convertSubscription,
   'sourceType': _$SubscriptionSourceTypeEnumMap[instance.sourceType],
+  'proxyLinks': instance.proxyLinks,
+  'favoriteProxyNames': instance.favoriteProxyNames.toList(),
+  'protectedProxyLinks': instance.protectedProxyLinks,
   'lastUpdateDate': instance.lastUpdateDate?.toIso8601String(),
   'autoUpdateDuration': instance.autoUpdateDuration.inMicroseconds,
   'subscriptionInfo': instance.subscriptionInfo,

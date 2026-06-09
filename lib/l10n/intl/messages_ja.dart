@@ -84,7 +84,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("表示/非表示"),
     "add": MessageLookupByLibrary.simpleMessage("追加"),
     "addProfile": MessageLookupByLibrary.simpleMessage("プロファイルを追加"),
+    "addProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "保護付きお気に入りに追加",
+    ),
     "addProxies": MessageLookupByLibrary.simpleMessage("プロキシを追加"),
+    "addProxyFavorite": MessageLookupByLibrary.simpleMessage("お気に入りに追加"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage("プロキシグループを追加"),
     "addProxyProviders": MessageLookupByLibrary.simpleMessage("プロキシプロバイダーを追加"),
     "addRule": MessageLookupByLibrary.simpleMessage("ルールを追加"),
@@ -577,6 +581,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "remoteDestination": MessageLookupByLibrary.simpleMessage("リモート宛先"),
     "remove": MessageLookupByLibrary.simpleMessage("削除"),
+    "removeProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "保護付きお気に入りを削除",
+    ),
+    "removeProxyFavorite": MessageLookupByLibrary.simpleMessage("お気に入りから削除"),
     "rename": MessageLookupByLibrary.simpleMessage("リネーム"),
     "request": MessageLookupByLibrary.simpleMessage("リクエスト"),
     "requests": MessageLookupByLibrary.simpleMessage("リクエスト"),

@@ -94,6 +94,39 @@ class $ProfilesTable extends Profiles
       ).withConverter<SubscriptionSourceType?>(
         $ProfilesTable.$convertersourceTypen,
       );
+  @override
+  late final GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  proxyLinks = GeneratedColumn<String>(
+    'proxy_links',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  ).withConverter<Map<String, String>>($ProfilesTable.$converterproxyLinks);
+  @override
+  late final GeneratedColumnWithTypeConverter<Set<String>, String>
+  favoriteProxyNames = GeneratedColumn<String>(
+    'favorite_proxy_names',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<Set<String>>($ProfilesTable.$converterfavoriteProxyNames);
+  @override
+  late final GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  protectedProxyLinks =
+      GeneratedColumn<String>(
+        'protected_proxy_links',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('{}'),
+      ).withConverter<Map<String, String>>(
+        $ProfilesTable.$converterprotectedProxyLinks,
+      );
   static const VerificationMeta _lastUpdateDateMeta = const VerificationMeta(
     'lastUpdateDate',
   );
@@ -197,6 +230,9 @@ class $ProfilesTable extends Profiles
     requestHeaders,
     convertSubscription,
     sourceType,
+    proxyLinks,
+    favoriteProxyNames,
+    protectedProxyLinks,
     lastUpdateDate,
     overwriteType,
     scriptId,
@@ -347,6 +383,24 @@ class $ProfilesTable extends Profiles
           data['${effectivePrefix}source_type'],
         ),
       ),
+      proxyLinks: $ProfilesTable.$converterproxyLinks.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}proxy_links'],
+        )!,
+      ),
+      favoriteProxyNames: $ProfilesTable.$converterfavoriteProxyNames.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}favorite_proxy_names'],
+        )!,
+      ),
+      protectedProxyLinks: $ProfilesTable.$converterprotectedProxyLinks.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}protected_proxy_links'],
+        )!,
+      ),
       lastUpdateDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_update_date'],
@@ -407,6 +461,12 @@ class $ProfilesTable extends Profiles
   );
   static JsonTypeConverter2<SubscriptionSourceType?, String?, String?>
   $convertersourceTypen = JsonTypeConverter2.asNullable($convertersourceType);
+  static TypeConverter<Map<String, String>, String> $converterproxyLinks =
+      const StringMapConverter();
+  static TypeConverter<Set<String>, String> $converterfavoriteProxyNames =
+      const StringSetConverter();
+  static TypeConverter<Map<String, String>, String>
+  $converterprotectedProxyLinks = const StringMapConverter();
   static JsonTypeConverter2<OverwriteType, String, String>
   $converteroverwriteType = const EnumNameConverter<OverwriteType>(
     OverwriteType.values,
@@ -428,6 +488,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final Map<String, String> requestHeaders;
   final bool convertSubscription;
   final SubscriptionSourceType? sourceType;
+  final Map<String, String> proxyLinks;
+  final Set<String> favoriteProxyNames;
+  final Map<String, String> protectedProxyLinks;
   final DateTime? lastUpdateDate;
   final OverwriteType overwriteType;
   final int? scriptId;
@@ -446,6 +509,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.requestHeaders,
     required this.convertSubscription,
     this.sourceType,
+    required this.proxyLinks,
+    required this.favoriteProxyNames,
+    required this.protectedProxyLinks,
     this.lastUpdateDate,
     required this.overwriteType,
     this.scriptId,
@@ -477,6 +543,21 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     if (!nullToAbsent || sourceType != null) {
       map['source_type'] = Variable<String>(
         $ProfilesTable.$convertersourceTypen.toSql(sourceType),
+      );
+    }
+    {
+      map['proxy_links'] = Variable<String>(
+        $ProfilesTable.$converterproxyLinks.toSql(proxyLinks),
+      );
+    }
+    {
+      map['favorite_proxy_names'] = Variable<String>(
+        $ProfilesTable.$converterfavoriteProxyNames.toSql(favoriteProxyNames),
+      );
+    }
+    {
+      map['protected_proxy_links'] = Variable<String>(
+        $ProfilesTable.$converterprotectedProxyLinks.toSql(protectedProxyLinks),
       );
     }
     if (!nullToAbsent || lastUpdateDate != null) {
@@ -531,6 +612,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       sourceType: sourceType == null && nullToAbsent
           ? const Value.absent()
           : Value(sourceType),
+      proxyLinks: Value(proxyLinks),
+      favoriteProxyNames: Value(favoriteProxyNames),
+      protectedProxyLinks: Value(protectedProxyLinks),
       lastUpdateDate: lastUpdateDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastUpdateDate),
@@ -571,6 +655,13 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       sourceType: $ProfilesTable.$convertersourceTypen.fromJson(
         serializer.fromJson<String?>(json['sourceType']),
       ),
+      proxyLinks: serializer.fromJson<Map<String, String>>(json['proxyLinks']),
+      favoriteProxyNames: serializer.fromJson<Set<String>>(
+        json['favoriteProxyNames'],
+      ),
+      protectedProxyLinks: serializer.fromJson<Map<String, String>>(
+        json['protectedProxyLinks'],
+      ),
       lastUpdateDate: serializer.fromJson<DateTime?>(json['lastUpdateDate']),
       overwriteType: $ProfilesTable.$converteroverwriteType.fromJson(
         serializer.fromJson<String>(json['overwriteType']),
@@ -604,6 +695,11 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'sourceType': serializer.toJson<String?>(
         $ProfilesTable.$convertersourceTypen.toJson(sourceType),
       ),
+      'proxyLinks': serializer.toJson<Map<String, String>>(proxyLinks),
+      'favoriteProxyNames': serializer.toJson<Set<String>>(favoriteProxyNames),
+      'protectedProxyLinks': serializer.toJson<Map<String, String>>(
+        protectedProxyLinks,
+      ),
       'lastUpdateDate': serializer.toJson<DateTime?>(lastUpdateDate),
       'overwriteType': serializer.toJson<String>(
         $ProfilesTable.$converteroverwriteType.toJson(overwriteType),
@@ -631,6 +727,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     Map<String, String>? requestHeaders,
     bool? convertSubscription,
     Value<SubscriptionSourceType?> sourceType = const Value.absent(),
+    Map<String, String>? proxyLinks,
+    Set<String>? favoriteProxyNames,
+    Map<String, String>? protectedProxyLinks,
     Value<DateTime?> lastUpdateDate = const Value.absent(),
     OverwriteType? overwriteType,
     Value<int?> scriptId = const Value.absent(),
@@ -651,6 +750,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     requestHeaders: requestHeaders ?? this.requestHeaders,
     convertSubscription: convertSubscription ?? this.convertSubscription,
     sourceType: sourceType.present ? sourceType.value : this.sourceType,
+    proxyLinks: proxyLinks ?? this.proxyLinks,
+    favoriteProxyNames: favoriteProxyNames ?? this.favoriteProxyNames,
+    protectedProxyLinks: protectedProxyLinks ?? this.protectedProxyLinks,
     lastUpdateDate: lastUpdateDate.present
         ? lastUpdateDate.value
         : this.lastUpdateDate,
@@ -684,6 +786,15 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       sourceType: data.sourceType.present
           ? data.sourceType.value
           : this.sourceType,
+      proxyLinks: data.proxyLinks.present
+          ? data.proxyLinks.value
+          : this.proxyLinks,
+      favoriteProxyNames: data.favoriteProxyNames.present
+          ? data.favoriteProxyNames.value
+          : this.favoriteProxyNames,
+      protectedProxyLinks: data.protectedProxyLinks.present
+          ? data.protectedProxyLinks.value
+          : this.protectedProxyLinks,
       lastUpdateDate: data.lastUpdateDate.present
           ? data.lastUpdateDate.value
           : this.lastUpdateDate,
@@ -719,6 +830,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('requestHeaders: $requestHeaders, ')
           ..write('convertSubscription: $convertSubscription, ')
           ..write('sourceType: $sourceType, ')
+          ..write('proxyLinks: $proxyLinks, ')
+          ..write('favoriteProxyNames: $favoriteProxyNames, ')
+          ..write('protectedProxyLinks: $protectedProxyLinks, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('scriptId: $scriptId, ')
@@ -742,6 +856,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     requestHeaders,
     convertSubscription,
     sourceType,
+    proxyLinks,
+    favoriteProxyNames,
+    protectedProxyLinks,
     lastUpdateDate,
     overwriteType,
     scriptId,
@@ -764,6 +881,9 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.requestHeaders == this.requestHeaders &&
           other.convertSubscription == this.convertSubscription &&
           other.sourceType == this.sourceType &&
+          other.proxyLinks == this.proxyLinks &&
+          other.favoriteProxyNames == this.favoriteProxyNames &&
+          other.protectedProxyLinks == this.protectedProxyLinks &&
           other.lastUpdateDate == this.lastUpdateDate &&
           other.overwriteType == this.overwriteType &&
           other.scriptId == this.scriptId &&
@@ -784,6 +904,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<Map<String, String>> requestHeaders;
   final Value<bool> convertSubscription;
   final Value<SubscriptionSourceType?> sourceType;
+  final Value<Map<String, String>> proxyLinks;
+  final Value<Set<String>> favoriteProxyNames;
+  final Value<Map<String, String>> protectedProxyLinks;
   final Value<DateTime?> lastUpdateDate;
   final Value<OverwriteType> overwriteType;
   final Value<int?> scriptId;
@@ -802,6 +925,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.requestHeaders = const Value.absent(),
     this.convertSubscription = const Value.absent(),
     this.sourceType = const Value.absent(),
+    this.proxyLinks = const Value.absent(),
+    this.favoriteProxyNames = const Value.absent(),
+    this.protectedProxyLinks = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     this.overwriteType = const Value.absent(),
     this.scriptId = const Value.absent(),
@@ -821,6 +947,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.requestHeaders = const Value.absent(),
     this.convertSubscription = const Value.absent(),
     this.sourceType = const Value.absent(),
+    this.proxyLinks = const Value.absent(),
+    this.favoriteProxyNames = const Value.absent(),
+    this.protectedProxyLinks = const Value.absent(),
     this.lastUpdateDate = const Value.absent(),
     required OverwriteType overwriteType,
     this.scriptId = const Value.absent(),
@@ -846,6 +975,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? requestHeaders,
     Expression<bool>? convertSubscription,
     Expression<String>? sourceType,
+    Expression<String>? proxyLinks,
+    Expression<String>? favoriteProxyNames,
+    Expression<String>? protectedProxyLinks,
     Expression<DateTime>? lastUpdateDate,
     Expression<String>? overwriteType,
     Expression<int>? scriptId,
@@ -866,6 +998,11 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (convertSubscription != null)
         'convert_subscription': convertSubscription,
       if (sourceType != null) 'source_type': sourceType,
+      if (proxyLinks != null) 'proxy_links': proxyLinks,
+      if (favoriteProxyNames != null)
+        'favorite_proxy_names': favoriteProxyNames,
+      if (protectedProxyLinks != null)
+        'protected_proxy_links': protectedProxyLinks,
       if (lastUpdateDate != null) 'last_update_date': lastUpdateDate,
       if (overwriteType != null) 'overwrite_type': overwriteType,
       if (scriptId != null) 'script_id': scriptId,
@@ -888,6 +1025,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<Map<String, String>>? requestHeaders,
     Value<bool>? convertSubscription,
     Value<SubscriptionSourceType?>? sourceType,
+    Value<Map<String, String>>? proxyLinks,
+    Value<Set<String>>? favoriteProxyNames,
+    Value<Map<String, String>>? protectedProxyLinks,
     Value<DateTime?>? lastUpdateDate,
     Value<OverwriteType>? overwriteType,
     Value<int?>? scriptId,
@@ -907,6 +1047,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       requestHeaders: requestHeaders ?? this.requestHeaders,
       convertSubscription: convertSubscription ?? this.convertSubscription,
       sourceType: sourceType ?? this.sourceType,
+      proxyLinks: proxyLinks ?? this.proxyLinks,
+      favoriteProxyNames: favoriteProxyNames ?? this.favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks ?? this.protectedProxyLinks,
       lastUpdateDate: lastUpdateDate ?? this.lastUpdateDate,
       overwriteType: overwriteType ?? this.overwriteType,
       scriptId: scriptId ?? this.scriptId,
@@ -949,6 +1092,25 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     if (sourceType.present) {
       map['source_type'] = Variable<String>(
         $ProfilesTable.$convertersourceTypen.toSql(sourceType.value),
+      );
+    }
+    if (proxyLinks.present) {
+      map['proxy_links'] = Variable<String>(
+        $ProfilesTable.$converterproxyLinks.toSql(proxyLinks.value),
+      );
+    }
+    if (favoriteProxyNames.present) {
+      map['favorite_proxy_names'] = Variable<String>(
+        $ProfilesTable.$converterfavoriteProxyNames.toSql(
+          favoriteProxyNames.value,
+        ),
+      );
+    }
+    if (protectedProxyLinks.present) {
+      map['protected_proxy_links'] = Variable<String>(
+        $ProfilesTable.$converterprotectedProxyLinks.toSql(
+          protectedProxyLinks.value,
+        ),
       );
     }
     if (lastUpdateDate.present) {
@@ -1002,6 +1164,9 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('requestHeaders: $requestHeaders, ')
           ..write('convertSubscription: $convertSubscription, ')
           ..write('sourceType: $sourceType, ')
+          ..write('proxyLinks: $proxyLinks, ')
+          ..write('favoriteProxyNames: $favoriteProxyNames, ')
+          ..write('protectedProxyLinks: $protectedProxyLinks, ')
           ..write('lastUpdateDate: $lastUpdateDate, ')
           ..write('overwriteType: $overwriteType, ')
           ..write('scriptId: $scriptId, ')
@@ -3694,6 +3859,9 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       Value<Map<String, String>> requestHeaders,
       Value<bool> convertSubscription,
       Value<SubscriptionSourceType?> sourceType,
+      Value<Map<String, String>> proxyLinks,
+      Value<Set<String>> favoriteProxyNames,
+      Value<Map<String, String>> protectedProxyLinks,
       Value<DateTime?> lastUpdateDate,
       required OverwriteType overwriteType,
       Value<int?> scriptId,
@@ -3714,6 +3882,9 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<Map<String, String>> requestHeaders,
       Value<bool> convertSubscription,
       Value<SubscriptionSourceType?> sourceType,
+      Value<Map<String, String>> proxyLinks,
+      Value<Set<String>> favoriteProxyNames,
+      Value<Map<String, String>> protectedProxyLinks,
       Value<DateTime?> lastUpdateDate,
       Value<OverwriteType> overwriteType,
       Value<int?> scriptId,
@@ -3827,6 +3998,32 @@ class $$ProfilesTableFilterComposer
   >
   get sourceType => $composableBuilder(
     column: $table.sourceType,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<
+    Map<String, String>,
+    Map<String, String>,
+    String
+  >
+  get proxyLinks => $composableBuilder(
+    column: $table.proxyLinks,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<Set<String>, Set<String>, String>
+  get favoriteProxyNames => $composableBuilder(
+    column: $table.favoriteProxyNames,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<
+    Map<String, String>,
+    Map<String, String>,
+    String
+  >
+  get protectedProxyLinks => $composableBuilder(
+    column: $table.protectedProxyLinks,
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
@@ -3983,6 +4180,21 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get proxyLinks => $composableBuilder(
+    column: $table.proxyLinks,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get favoriteProxyNames => $composableBuilder(
+    column: $table.favoriteProxyNames,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get protectedProxyLinks => $composableBuilder(
+    column: $table.protectedProxyLinks,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastUpdateDate => $composableBuilder(
     column: $table.lastUpdateDate,
     builder: (column) => ColumnOrderings(column),
@@ -4069,6 +4281,24 @@ class $$ProfilesTableAnnotationComposer
   GeneratedColumnWithTypeConverter<SubscriptionSourceType?, String>
   get sourceType => $composableBuilder(
     column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  get proxyLinks => $composableBuilder(
+    column: $table.proxyLinks,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Set<String>, String>
+  get favoriteProxyNames => $composableBuilder(
+    column: $table.favoriteProxyNames,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<Map<String, String>, String>
+  get protectedProxyLinks => $composableBuilder(
+    column: $table.protectedProxyLinks,
     builder: (column) => column,
   );
 
@@ -4206,6 +4436,10 @@ class $$ProfilesTableTableManager
                 Value<bool> convertSubscription = const Value.absent(),
                 Value<SubscriptionSourceType?> sourceType =
                     const Value.absent(),
+                Value<Map<String, String>> proxyLinks = const Value.absent(),
+                Value<Set<String>> favoriteProxyNames = const Value.absent(),
+                Value<Map<String, String>> protectedProxyLinks =
+                    const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 Value<OverwriteType> overwriteType = const Value.absent(),
                 Value<int?> scriptId = const Value.absent(),
@@ -4225,6 +4459,9 @@ class $$ProfilesTableTableManager
                 requestHeaders: requestHeaders,
                 convertSubscription: convertSubscription,
                 sourceType: sourceType,
+                proxyLinks: proxyLinks,
+                favoriteProxyNames: favoriteProxyNames,
+                protectedProxyLinks: protectedProxyLinks,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 scriptId: scriptId,
@@ -4247,6 +4484,10 @@ class $$ProfilesTableTableManager
                 Value<bool> convertSubscription = const Value.absent(),
                 Value<SubscriptionSourceType?> sourceType =
                     const Value.absent(),
+                Value<Map<String, String>> proxyLinks = const Value.absent(),
+                Value<Set<String>> favoriteProxyNames = const Value.absent(),
+                Value<Map<String, String>> protectedProxyLinks =
+                    const Value.absent(),
                 Value<DateTime?> lastUpdateDate = const Value.absent(),
                 required OverwriteType overwriteType,
                 Value<int?> scriptId = const Value.absent(),
@@ -4266,6 +4507,9 @@ class $$ProfilesTableTableManager
                 requestHeaders: requestHeaders,
                 convertSubscription: convertSubscription,
                 sourceType: sourceType,
+                proxyLinks: proxyLinks,
+                favoriteProxyNames: favoriteProxyNames,
+                protectedProxyLinks: protectedProxyLinks,
                 lastUpdateDate: lastUpdateDate,
                 overwriteType: overwriteType,
                 scriptId: scriptId,

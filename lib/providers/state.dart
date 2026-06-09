@@ -15,21 +15,37 @@ import 'database.dart';
 
 part 'generated/state.g.dart';
 
+List<Proxy> _sortFavoriteProxies(List<Proxy> proxies, Set<String> favorites) {
+  if (favorites.isEmpty || proxies.isEmpty) return proxies;
+  return [
+    ...proxies.where((proxy) => favorites.contains(proxy.name)),
+    ...proxies.where((proxy) => !favorites.contains(proxy.name)),
+  ];
+}
+
 @riverpod
 GroupsState currentGroupsState(Ref ref) {
   final mode = ref.watch(
     patchClashConfigProvider.select((state) => state.mode),
   );
-  final groups = ref.watch(
-    groupsProvider.select(
-      (state) => state.map((item) {
-        return item.copyWith(
-          now: '',
-          all: item.all.map((proxy) => proxy.copyWith(now: '')).toList(),
-        );
-      }),
-    ),
+  final favorites = ref.watch(
+    currentProfileProvider.select((profile) {
+      if (profile == null) return const <String>{};
+      return {
+        ...profile.favoriteProxyNames,
+        ...profile.protectedProxyLinks.keys,
+      };
+    }),
   );
+  final groups = ref.watch(groupsProvider).map((item) {
+    return item.copyWith(
+      now: '',
+      all: _sortFavoriteProxies(
+        item.all.map((proxy) => proxy.copyWith(now: '')).toList(),
+        favorites,
+      ),
+    );
+  });
   return GroupsState(
     value: switch (mode) {
       Mode.direct => [],

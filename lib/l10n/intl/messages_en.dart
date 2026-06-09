@@ -94,7 +94,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("Show/Hide"),
     "add": MessageLookupByLibrary.simpleMessage("Add"),
     "addProfile": MessageLookupByLibrary.simpleMessage("Add Profile"),
+    "addProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Add protected favorite",
+    ),
     "addProxies": MessageLookupByLibrary.simpleMessage("Add proxies"),
+    "addProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Add to favorites",
+    ),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage("Add proxy group"),
     "addProxyProviders": MessageLookupByLibrary.simpleMessage(
       "Add proxy providers",
@@ -727,6 +733,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Remote destination",
     ),
     "remove": MessageLookupByLibrary.simpleMessage("Remove"),
+    "removeProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Remove protected favorite",
+    ),
+    "removeProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Remove from favorites",
+    ),
     "rename": MessageLookupByLibrary.simpleMessage("Rename"),
     "request": MessageLookupByLibrary.simpleMessage("Request"),
     "requests": MessageLookupByLibrary.simpleMessage("Requests"),

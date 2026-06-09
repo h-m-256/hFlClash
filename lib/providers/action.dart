@@ -841,6 +841,39 @@ class ProfilesAction extends _$ProfilesAction {
     }
   }
 
+  void toggleFavoriteProxy(String proxyName) {
+    final currentProfile = ref.read(currentProfileProvider);
+    if (currentProfile == null || !currentProfile.convertSubscription) return;
+    final favoriteProxyNames = Set<String>.from(
+      currentProfile.favoriteProxyNames,
+    );
+    if (!favoriteProxyNames.remove(proxyName)) {
+      favoriteProxyNames.add(proxyName);
+    }
+    ref
+        .read(profilesProvider.notifier)
+        .put(currentProfile.copyWith(favoriteProxyNames: favoriteProxyNames));
+  }
+
+  void toggleProtectedFavoriteProxy({
+    required String proxyName,
+    required String link,
+  }) {
+    final currentProfile = ref.read(currentProfileProvider);
+    if (currentProfile == null || !currentProfile.convertSubscription) return;
+    final protectedProxyLinks = Map<String, String>.from(
+      currentProfile.protectedProxyLinks,
+    );
+    if (protectedProxyLinks.containsKey(proxyName)) {
+      protectedProxyLinks.remove(proxyName);
+    } else {
+      protectedProxyLinks[proxyName] = link;
+    }
+    ref
+        .read(profilesProvider.notifier)
+        .put(currentProfile.copyWith(protectedProxyLinks: protectedProxyLinks));
+  }
+
   Future<void> deleteProfile(int id) async {
     ref.read(profilesProvider.notifier).del(id);
     clearEffect(id);

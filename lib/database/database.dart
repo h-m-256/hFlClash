@@ -33,7 +33,7 @@ class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -60,6 +60,9 @@ class Database extends _$Database {
         }
         if (from < 5) {
           await _migrateProfileConvertSubscription(m);
+        }
+        if (from < 6) {
+          await _migrateProfileProxyMetadata(m);
         }
       },
       beforeOpen: (details) async {
@@ -149,6 +152,22 @@ class Database extends _$Database {
         .toList();
     if (!columnNames.contains('convert_subscription')) {
       await m.addColumn(profiles, profiles.convertSubscription);
+    }
+  }
+
+  Future<void> _migrateProfileProxyMetadata(Migrator m) async {
+    final tableInfo = await customSelect('PRAGMA table_info(profiles)').get();
+    final columnNames = tableInfo
+        .map((row) => row.read<String>('name'))
+        .toList();
+    if (!columnNames.contains('proxy_links')) {
+      await m.addColumn(profiles, profiles.proxyLinks);
+    }
+    if (!columnNames.contains('favorite_proxy_names')) {
+      await m.addColumn(profiles, profiles.favoriteProxyNames);
+    }
+    if (!columnNames.contains('protected_proxy_links')) {
+      await m.addColumn(profiles, profiles.protectedProxyLinks);
     }
   }
 

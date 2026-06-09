@@ -24,6 +24,18 @@ class Profiles extends Table {
 
   TextColumn get sourceType => textEnum<SubscriptionSourceType>().nullable()();
 
+  TextColumn get proxyLinks => text()
+      .map(const StringMapConverter())
+      .withDefault(const Constant('{}'))();
+
+  TextColumn get favoriteProxyNames => text()
+      .map(const StringSetConverter())
+      .withDefault(const Constant('[]'))();
+
+  TextColumn get protectedProxyLinks => text()
+      .map(const StringMapConverter())
+      .withDefault(const Constant('{}'))();
+
   DateTimeColumn get lastUpdateDate => dateTime().nullable()();
 
   TextColumn get overwriteType => textEnum<OverwriteType>()();
@@ -126,6 +138,9 @@ extension RawProfilExt on RawProfile {
       requestHeaders: requestHeaders,
       convertSubscription: convertSubscription,
       sourceType: sourceType,
+      proxyLinks: proxyLinks,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
       lastUpdateDate: lastUpdateDate,
       autoUpdateDuration: Duration(milliseconds: autoUpdateDurationMillis),
       subscriptionInfo: subscriptionInfo,
@@ -150,6 +165,9 @@ extension ProfilesCompanionExt on Profile {
       requestHeaders: Value(requestHeaders),
       convertSubscription: Value(convertSubscription),
       sourceType: Value(sourceType),
+      proxyLinks: Value(proxyLinks),
+      favoriteProxyNames: Value(favoriteProxyNames),
+      protectedProxyLinks: Value(protectedProxyLinks),
       lastUpdateDate: Value(lastUpdateDate),
       autoUpdateDurationMillis: autoUpdateDuration.inMilliseconds,
       subscriptionInfo: Value(subscriptionInfo),

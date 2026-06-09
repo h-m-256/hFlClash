@@ -2259,6 +2259,46 @@ class AppLocalizations {
     return Intl.message('Copy link', name: 'copyLink', desc: '', args: []);
   }
 
+  /// `Add to favorites`
+  String get addProxyFavorite {
+    return Intl.message(
+      'Add to favorites',
+      name: 'addProxyFavorite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remove from favorites`
+  String get removeProxyFavorite {
+    return Intl.message(
+      'Remove from favorites',
+      name: 'removeProxyFavorite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add protected favorite`
+  String get addProtectedProxyFavorite {
+    return Intl.message(
+      'Add protected favorite',
+      name: 'addProtectedProxyFavorite',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remove protected favorite`
+  String get removeProtectedProxyFavorite {
+    return Intl.message(
+      'Remove protected favorite',
+      name: 'removeProtectedProxyFavorite',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Export file`
   String get exportFile {
     return Intl.message('Export file', name: 'exportFile', desc: '', args: []);

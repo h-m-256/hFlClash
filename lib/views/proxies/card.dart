@@ -7,6 +7,7 @@ import 'package:fl_clash/views/proxies/common.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 class ProxyCard extends StatelessWidget {
   final String groupName;
@@ -116,12 +117,88 @@ class ProxyCard extends StatelessWidget {
     globalState.showNotifier(currentAppLocalizations.notSelectedTip);
   }
 
+  Future<void> _copyProxyLink(BuildContext context, String link) async {
+    await Clipboard.setData(ClipboardData(text: link));
+    if (context.mounted) {
+      context.showNotifier(context.appLocalizations.copySuccess);
+    }
+  }
+
+  void _toggleFavorite(WidgetRef ref) {
+    ref.read(profilesActionProvider.notifier).toggleFavoriteProxy(proxy.name);
+  }
+
+  void _toggleProtectedFavorite(WidgetRef ref, String link) {
+    ref
+        .read(profilesActionProvider.notifier)
+        .toggleProtectedFavoriteProxy(proxyName: proxy.name, link: link);
+  }
+
+  Widget _withProxyMenu({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final profile = ref.watch(currentProfileProvider);
+        final link = profile?.proxyLinks[proxy.name];
+        if (profile?.convertSubscription != true || link == null) return child;
+        final isFavorite = profile!.favoriteProxyNames.contains(proxy.name);
+        final isProtected = profile.protectedProxyLinks.containsKey(proxy.name);
+        final appLocalizations = context.appLocalizations;
+        return CommonPopupBox(
+          targetBuilder: (open) {
+            return GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onLongPress: () {
+                open(offset: const Offset(0, 20));
+              },
+              child: child,
+            );
+          },
+          popup: CommonPopupMenu(
+            minWidth: 240,
+            items: [
+              PopupMenuItemData(
+                icon: Icons.link,
+                label: appLocalizations.copyLink,
+                onPressed: () {
+                  _copyProxyLink(context, link);
+                },
+              ),
+              PopupMenuItemData(
+                icon: isFavorite ? Icons.star_outline : Icons.star_rounded,
+                label: isFavorite
+                    ? appLocalizations.removeProxyFavorite
+                    : appLocalizations.addProxyFavorite,
+                onPressed: () {
+                  _toggleFavorite(ref);
+                },
+              ),
+              PopupMenuItemData(
+                icon: isProtected
+                    ? Icons.lock_open_rounded
+                    : Icons.lock_rounded,
+                label: isProtected
+                    ? appLocalizations.removeProtectedProxyFavorite
+                    : appLocalizations.addProtectedProxyFavorite,
+                onPressed: () {
+                  _toggleProtectedFavorite(ref, link);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final measure = globalState.measure;
     final delayText = _buildDelayText();
     final proxyNameText = _buildProxyNameText(context);
-    return Stack(
+    final card = Stack(
       children: [
         Consumer(
           builder: (_, ref, child) {
@@ -190,7 +267,44 @@ class ProxyCard extends StatelessWidget {
             right: 0,
             child: _ProxyComputedMark(groupName: groupName, proxy: proxy),
           ),
+        _ProxyFavoriteMark(proxy: proxy),
       ],
+    );
+    return _withProxyMenu(context: context, child: card);
+  }
+}
+
+class _ProxyFavoriteMark extends ConsumerWidget {
+  final Proxy proxy;
+
+  const _ProxyFavoriteMark({required this.proxy});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFavorite = ref.watch(
+      currentProfileProvider.select((profile) {
+        return profile?.favoriteProxyNames.contains(proxy.name) == true ||
+            profile?.protectedProxyLinks.containsKey(proxy.name) == true;
+      }),
+    );
+    if (!isFavorite) return const SizedBox();
+    return Positioned(
+      top: 0,
+      left: 0,
+      child: Container(
+        alignment: Alignment.topLeft,
+        margin: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: context.colorScheme.secondaryContainer,
+        ),
+        child: Icon(
+          Icons.star_rounded,
+          size: 14,
+          color: context.colorScheme.primary,
+        ),
+      ),
     );
   }
 }

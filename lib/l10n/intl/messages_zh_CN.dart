@@ -82,7 +82,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("显示/隐藏"),
     "add": MessageLookupByLibrary.simpleMessage("添加"),
     "addProfile": MessageLookupByLibrary.simpleMessage("添加配置"),
+    "addProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "添加受保护收藏",
+    ),
     "addProxies": MessageLookupByLibrary.simpleMessage("添加代理"),
+    "addProxyFavorite": MessageLookupByLibrary.simpleMessage("添加到收藏"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage("添加策略组"),
     "addProxyProviders": MessageLookupByLibrary.simpleMessage("添加代理集"),
     "addRule": MessageLookupByLibrary.simpleMessage("添加规则"),
@@ -499,6 +503,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage("备份数据到WebDAV"),
     "remoteDestination": MessageLookupByLibrary.simpleMessage("远程目标"),
     "remove": MessageLookupByLibrary.simpleMessage("移除"),
+    "removeProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "移除受保护收藏",
+    ),
+    "removeProxyFavorite": MessageLookupByLibrary.simpleMessage("从收藏移除"),
     "rename": MessageLookupByLibrary.simpleMessage("重命名"),
     "request": MessageLookupByLibrary.simpleMessage("请求"),
     "requests": MessageLookupByLibrary.simpleMessage("请求"),

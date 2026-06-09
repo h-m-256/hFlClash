@@ -93,7 +93,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("Показать/Скрыть"),
     "add": MessageLookupByLibrary.simpleMessage("Добавить"),
     "addProfile": MessageLookupByLibrary.simpleMessage("Добавить профиль"),
+    "addProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "В избранное с защитой",
+    ),
     "addProxies": MessageLookupByLibrary.simpleMessage("Добавить прокси"),
+    "addProxyFavorite": MessageLookupByLibrary.simpleMessage("В избранное"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage(
       "Добавить группу прокси",
     ),
@@ -764,6 +768,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Удалённое назначение",
     ),
     "remove": MessageLookupByLibrary.simpleMessage("Удалить"),
+    "removeProtectedProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Убрать защищенное избранное",
+    ),
+    "removeProxyFavorite": MessageLookupByLibrary.simpleMessage(
+      "Убрать из избранного",
+    ),
     "rename": MessageLookupByLibrary.simpleMessage("Переименовать"),
     "request": MessageLookupByLibrary.simpleMessage("Запрос"),
     "requests": MessageLookupByLibrary.simpleMessage("Запросы"),

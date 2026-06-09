@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
@@ -52,6 +53,9 @@ abstract class Profile with _$Profile {
     @Default({}) Map<String, String> requestHeaders,
     @Default(false) bool convertSubscription,
     SubscriptionSourceType? sourceType,
+    @Default({}) Map<String, String> proxyLinks,
+    @Default({}) Set<String> favoriteProxyNames,
+    @Default({}) Map<String, String> protectedProxyLinks,
     DateTime? lastUpdateDate,
     required Duration autoUpdateDuration,
     SubscriptionInfo? subscriptionInfo,
@@ -236,8 +240,16 @@ extension ProfileExtension on Profile {
   Future<Profile> saveFile(Uint8List bytes) async {
     final path = await appPath.tempFilePath;
     final tempFile = File(path);
+    final currentFavoriteProxyNames = favoriteProxyNames;
+    final currentProtectedProxyLinks = protectedProxyLinks;
     final converted = convertSubscription
-        ? subscriptionConverter.convertBytes(bytes)
+        ? await Isolate.run(() {
+            return subscriptionConverter.convertBytes(
+              bytes,
+              favoriteProxyNames: currentFavoriteProxyNames,
+              protectedProxyLinks: currentProtectedProxyLinks,
+            );
+          })
         : SubscriptionConversionResult(bytes: bytes);
     await tempFile.safeWriteAsBytes(converted.bytes);
     final message = await coreController.validateConfig(path);
@@ -252,6 +264,7 @@ extension ProfileExtension on Profile {
       sourceType: convertSubscription
           ? converted.sourceType ?? sourceType
           : null,
+      proxyLinks: convertSubscription ? converted.proxyLinks : {},
     );
   }
 
