@@ -901,6 +901,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "saveChanges": MessageLookupByLibrary.simpleMessage(
       "Do you want to save the changes?",
     ),
+    "saveDelayHistory": MessageLookupByLibrary.simpleMessage(
+      "Save ping results",
+    ),
+    "saveDelayHistoryDesc": MessageLookupByLibrary.simpleMessage(
+      "Persist the latest proxy ping for each profile after restart",
+    ),
     "script": MessageLookupByLibrary.simpleMessage("Script"),
     "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
       "Script mode, use external extension scripts, provide one-click override configuration capability",

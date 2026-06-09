@@ -621,6 +621,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleTarget": MessageLookupByLibrary.simpleMessage("规则目标"),
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("是否保存更改？"),
+    "saveDelayHistory": MessageLookupByLibrary.simpleMessage("保存延迟测试结果"),
+    "saveDelayHistoryDesc": MessageLookupByLibrary.simpleMessage(
+      "重启后保留每个配置中代理的最新延迟",
+    ),
     "script": MessageLookupByLibrary.simpleMessage("脚本"),
     "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
       "脚本模式，使用外部扩展脚本，提供一键覆写配置的能力",

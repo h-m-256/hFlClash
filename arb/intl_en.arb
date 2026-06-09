@@ -186,6 +186,8 @@
   "autoCloseConnectionsDesc": "Auto close connections after change node",
   "onlyStatisticsProxy": "Only statistics proxy",
   "onlyStatisticsProxyDesc": "When turned on, only statistics proxy traffic",
+  "saveDelayHistory": "Save ping results",
+  "saveDelayHistoryDesc": "Persist the latest proxy ping for each profile after restart",
   "pureBlackMode": "Pure black mode",
   "keepAliveIntervalDesc": "Tcp keep alive interval",
   "entries": " entries",

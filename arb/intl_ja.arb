@@ -186,6 +186,8 @@
   "autoCloseConnectionsDesc": "ノード変更後に接続を自動閉じる",
   "onlyStatisticsProxy": "プロキシのみ統計",
   "onlyStatisticsProxyDesc": "有効化するとプロキシトラフィックのみ統計",
+  "saveDelayHistory": "Ping 結果を保存",
+  "saveDelayHistoryDesc": "再起動後もプロファイルごとの最新プロキシ ping を保持します",
   "pureBlackMode": "純黒モード",
   "keepAliveIntervalDesc": "TCPキープアライブ間隔",
   "entries": " エントリ",

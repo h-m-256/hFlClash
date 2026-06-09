@@ -632,6 +632,58 @@ abstract class _$ExcludeSSIDs extends $Notifier<List<String>> {
   }
 }
 
+@ProviderFor(PersistedDelay)
+final persistedDelayProvider = PersistedDelayProvider._();
+
+final class PersistedDelayProvider
+    extends $NotifierProvider<PersistedDelay, Map<String, int>> {
+  PersistedDelayProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'persistedDelayProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$persistedDelayHash();
+
+  @$internal
+  @override
+  PersistedDelay create() => PersistedDelay();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<String, int> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<String, int>>(value),
+    );
+  }
+}
+
+String _$persistedDelayHash() => r'353ac1172bc227b12c8f1f58fd8250acb37bcbcc';
+
+abstract class _$PersistedDelay extends $Notifier<Map<String, int>> {
+  Map<String, int> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<Map<String, int>, Map<String, int>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<String, int>, Map<String, int>>,
+              Map<String, int>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(_config)
 final configProvider = _ConfigProvider._();
 
@@ -670,4 +722,4 @@ final class _ConfigProvider extends $FunctionalProvider<Config, Config, Config>
   }
 }
 
-String _$_configHash() => r'7f29da1e31a3393fb36ab43c21f0d1b38223afec';
+String _$_configHash() => r'3475546c4b8eb98b3a4f165af437975be061d01a';

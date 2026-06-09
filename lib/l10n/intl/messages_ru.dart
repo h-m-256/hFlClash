@@ -946,6 +946,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleTarget": MessageLookupByLibrary.simpleMessage("Цель правила"),
     "save": MessageLookupByLibrary.simpleMessage("Сохранить"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("Сохранить изменения?"),
+    "saveDelayHistory": MessageLookupByLibrary.simpleMessage(
+      "Сохранять результаты пинга",
+    ),
+    "saveDelayHistoryDesc": MessageLookupByLibrary.simpleMessage(
+      "Хранить последний ping прокси для каждой подписки после перезапуска",
+    ),
     "script": MessageLookupByLibrary.simpleMessage("Скрипт"),
     "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
       "Режим скрипта, использование внешних расширяющих скриптов, предоставление возможности переопределения конфигурации одним кликом",

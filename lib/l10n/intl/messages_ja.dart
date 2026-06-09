@@ -723,6 +723,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleTarget": MessageLookupByLibrary.simpleMessage("ルール対象"),
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("変更を保存しますか？"),
+    "saveDelayHistory": MessageLookupByLibrary.simpleMessage("Ping 結果を保存"),
+    "saveDelayHistoryDesc": MessageLookupByLibrary.simpleMessage(
+      "再起動後もプロファイルごとの最新プロキシ ping を保持します",
+    ),
     "script": MessageLookupByLibrary.simpleMessage("スクリプト"),
     "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
       "スクリプトモード、外部拡張スクリプトを使用し、ワンクリックで設定を上書きする機能を提供",

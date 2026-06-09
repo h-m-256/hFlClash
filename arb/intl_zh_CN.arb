@@ -186,6 +186,8 @@
   "autoCloseConnectionsDesc": "切换节点后自动关闭连接",
   "onlyStatisticsProxy": "仅统计代理",
   "onlyStatisticsProxyDesc": "开启后，将只统计代理流量",
+  "saveDelayHistory": "保存延迟测试结果",
+  "saveDelayHistoryDesc": "重启后保留每个配置中代理的最新延迟",
   "pureBlackMode": "纯黑模式",
   "keepAliveIntervalDesc": "TCP保持活动间隔",
   "entries": "个条目",

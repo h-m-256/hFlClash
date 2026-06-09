@@ -1449,6 +1449,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Save ping results`
+  String get saveDelayHistory {
+    return Intl.message(
+      'Save ping results',
+      name: 'saveDelayHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Persist the latest proxy ping for each profile after restart`
+  String get saveDelayHistoryDesc {
+    return Intl.message(
+      'Persist the latest proxy ping for each profile after restart',
+      name: 'saveDelayHistoryDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Pure black mode`
   String get pureBlackMode {
     return Intl.message(

@@ -3,6 +3,7 @@ export 'clash_config.dart';
 export 'common.dart';
 export 'config.dart';
 export 'core.dart';
+export 'delay_cache.dart';
 export 'delay_test.dart';
 export 'profile.dart';
 export 'state.dart';

@@ -252,7 +252,10 @@ class Groups extends _$Groups with AutoDisposeNotifierMixin {
 class DelayDataSource extends _$DelayDataSource with AutoDisposeNotifierMixin {
   @override
   DelayMap build() {
-    return {};
+    final profileId = ref.watch(currentProfileIdProvider);
+    final cache = ref.watch(persistedDelayProvider);
+    final saveDelayHistory = ref.watch(appSettingProvider).saveDelayHistory;
+    return saveDelayHistory ? delayMapForProfile(cache, profileId) : {};
   }
 
   void setDelay(Delay delay) {
@@ -264,6 +267,48 @@ class DelayDataSource extends _$DelayDataSource with AutoDisposeNotifierMixin {
       newDelayMap[delay.url]![delay.name] = delay.value;
       value = newDelayMap;
     }
+    _persistDelay(delay);
+  }
+
+  void _persistDelay(Delay delay) {
+    final value = delay.value;
+    if (value == null || value == 0) return;
+    if (!ref.read(appSettingProvider).saveDelayHistory) return;
+    final profileId = ref.read(currentProfileIdProvider);
+    if (profileId == null) return;
+    final key = buildDelayCacheKey(
+      profileId: profileId,
+      testUrl: delay.url,
+      proxyName: delay.name,
+    );
+    final next = Map<String, int>.from(ref.read(persistedDelayProvider));
+    if (next[key] == value) return;
+    next[key] = value;
+    ref.read(persistedDelayProvider.notifier).value = next;
+    ref.read(storeActionProvider.notifier).savePreferencesDebounce();
+  }
+
+  void clearPersistedForProfile({
+    required int profileId,
+    required Set<String> aliveProxyNames,
+  }) {
+    final next = Map<String, int>.from(ref.read(persistedDelayProvider));
+    final beforeLength = next.length;
+    next.removeWhere((key, _) {
+      final parsed = parseDelayCacheKey(key);
+      return parsed != null &&
+          parsed.profileId == profileId &&
+          !aliveProxyNames.contains(parsed.proxyName);
+    });
+    if (next.length == beforeLength) return;
+    ref.read(persistedDelayProvider.notifier).value = next;
+    ref.read(storeActionProvider.notifier).savePreferencesDebounce();
+  }
+
+  void clearAllPersisted() {
+    ref.read(persistedDelayProvider.notifier).value = {};
+    value = {};
+    ref.read(storeActionProvider.notifier).savePreferencesDebounce();
   }
 }
 

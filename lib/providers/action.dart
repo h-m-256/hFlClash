@@ -130,7 +130,7 @@ class SetupAction extends _$SetupAction {
 
   void fullSetup() {
     if (!ref.read(initProvider)) return;
-    ref.read(delayDataSourceProvider.notifier).value = {};
+    ref.invalidate(delayDataSourceProvider);
     applyProfile(force: true);
     ref.read(logsProvider.notifier).value = FixedList(500);
     ref.read(requestsProvider.notifier).value = FixedList(500);
@@ -751,12 +751,14 @@ class ProxiesAction extends _$ProxiesAction {
           final selectedMap = ref.read(
             currentProfileProvider.select((state) => state?.selectedMap ?? {}),
           );
-          return coreController.getProxiesGroups(
+          final groups = await coreController.getProxiesGroups(
             selectedMap: selectedMap,
             sortType: sortType,
             delayMap: delayMap,
             defaultTestUrl: testUrl,
           );
+          _prunePersistedDelay(groups);
+          return groups;
         },
         retryIf: (res) => res.isEmpty,
       );
@@ -784,6 +786,24 @@ class ProxiesAction extends _$ProxiesAction {
 
   void setDelay(Delay delay) {
     ref.read(delayDataSourceProvider.notifier).setDelay(delay);
+  }
+
+  void _prunePersistedDelay(List<Group> groups) {
+    if (!ref.read(appSettingProvider).saveDelayHistory) return;
+    final profileId = ref.read(currentProfileIdProvider);
+    if (profileId == null || groups.isEmpty) return;
+    final aliveProxyNames = <String>{};
+    for (final group in groups) {
+      for (final proxy in group.all) {
+        aliveProxyNames.add(proxy.name);
+      }
+    }
+    ref
+        .read(delayDataSourceProvider.notifier)
+        .clearPersistedForProfile(
+          profileId: profileId,
+          aliveProxyNames: aliveProxyNames,
+        );
   }
 
   Future<void> changeProxy({

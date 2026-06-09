@@ -25,9 +25,9 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(appSettingProvider.notifier).update(
-            (_) => const AppSettingProps(autoLaunch: true),
-          );
+      container
+          .read(appSettingProvider.notifier)
+          .update((_) => const AppSettingProps(autoLaunch: true));
       final value = container.read(appSettingProvider);
       expect(value.autoLaunch, true);
     });
@@ -41,9 +41,9 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(windowSettingProvider.notifier).update(
-            (_) => const WindowProps(width: 1024, height: 768),
-          );
+      container
+          .read(windowSettingProvider.notifier)
+          .update((_) => const WindowProps(width: 1024, height: 768));
       final value = container.read(windowSettingProvider);
       expect(value.width, 1024);
       expect(value.height, 768);
@@ -58,9 +58,9 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(vpnSettingProvider.notifier).update(
-            (_) => const VpnProps(enable: false),
-          );
+      container
+          .read(vpnSettingProvider.notifier)
+          .update((_) => const VpnProps(enable: false));
       expect(container.read(vpnSettingProvider).enable, false);
     });
   });
@@ -73,9 +73,9 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(networkSettingProvider.notifier).update(
-            (_) => const NetworkProps(systemProxy: false),
-          );
+      container
+          .read(networkSettingProvider.notifier)
+          .update((_) => const NetworkProps(systemProxy: false));
       expect(container.read(networkSettingProvider).systemProxy, false);
     });
   });
@@ -87,13 +87,10 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(themeSettingProvider.notifier).update(
-            (_) => const ThemeProps(primaryColor: 0xFF123456),
-          );
-      expect(
-        container.read(themeSettingProvider).primaryColor,
-        0xFF123456,
-      );
+      container
+          .read(themeSettingProvider.notifier)
+          .update((_) => const ThemeProps(primaryColor: 0xFF123456));
+      expect(container.read(themeSettingProvider).primaryColor, 0xFF123456);
     });
   });
 
@@ -138,7 +135,9 @@ void main() {
     });
 
     test('can update state', () {
-      container.read(proxiesStyleSettingProvider.notifier).update(
+      container
+          .read(proxiesStyleSettingProvider.notifier)
+          .update(
             (_) => const ProxiesStyleProps(sortType: ProxiesSortType.delay),
           );
       expect(
@@ -176,9 +175,10 @@ void main() {
         themeProps: ThemeProps(),
         currentProfileId: 7,
         overrideDns: true,
+        persistedDelayMap: {'7\u001ftest\u001fproxy': 123},
       );
       final overrides = buildConfigOverrides(config);
-      expect(overrides.length, 12);
+      expect(overrides.length, 13);
 
       final overrideContainer = ProviderContainer(overrides: overrides);
       addTearDown(overrideContainer.dispose);
@@ -189,6 +189,9 @@ void main() {
         overrideContainer.read(appSettingProvider).onlyStatisticsProxy,
         false,
       );
+      expect(overrideContainer.read(persistedDelayProvider), {
+        '7\u001ftest\u001fproxy': 123,
+      });
     });
   });
 }

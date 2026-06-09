@@ -36,6 +36,7 @@ void main() {
       expect(restored.minimizeOnExit, true);
       expect(restored.restoreStrategy, RestoreStrategy.compatible);
       expect(restored.testUrl, defaultTestUrl);
+      expect(restored.saveDelayHistory, true);
     });
 
     test('custom values survive round-trip', () {
@@ -45,6 +46,7 @@ void main() {
         autoLaunch: true,
         closeConnections: false,
         testUrl: 'https://custom.test',
+        saveDelayHistory: false,
       );
       final restored = roundTrip(
         () => props.toJson(),
@@ -55,6 +57,7 @@ void main() {
       expect(restored.autoLaunch, true);
       expect(restored.closeConnections, false);
       expect(restored.testUrl, 'https://custom.test');
+      expect(restored.saveDelayHistory, false);
     });
 
     test('safeFromJson returns default on null', () {
@@ -245,6 +248,7 @@ void main() {
       expect(restored.networkProps.systemProxy, true);
       expect(restored.vpnProps.enable, true);
       expect(restored.hotKeyActions, isEmpty);
+      expect(restored.persistedDelayMap, isEmpty);
     });
 
     test('realFromJson handles null', () {
@@ -265,6 +269,7 @@ void main() {
           themeMode: ThemeMode.system,
         ),
         windowProps: WindowProps(width: 1280, height: 720),
+        persistedDelayMap: {'1\u001fhttps://test\u001fProxy': 123},
       );
       final restored = roundTrip(() => config.toJson(), Config.fromJson);
       expect(restored.currentProfileId, 42);
@@ -275,6 +280,35 @@ void main() {
       expect(restored.vpnProps.enable, false);
       expect(restored.windowProps.width, 1280);
       expect(restored.windowProps.height, 720);
+      expect(restored.persistedDelayMap, {
+        '1\u001fhttps://test\u001fProxy': 123,
+      });
+    });
+  });
+
+  group('Delay cache helpers', () {
+    test('builds and parses scoped delay cache keys', () {
+      final key = buildDelayCacheKey(
+        profileId: 7,
+        testUrl: 'https://test',
+        proxyName: 'Proxy',
+      );
+      final parsed = parseDelayCacheKey(key);
+
+      expect(parsed?.profileId, 7);
+      expect(parsed?.testUrl, 'https://test');
+      expect(parsed?.proxyName, 'Proxy');
+    });
+
+    test('filters delay cache for one profile', () {
+      final cache = {
+        buildDelayCacheKey(profileId: 1, testUrl: 'u', proxyName: 'a'): 10,
+        buildDelayCacheKey(profileId: 2, testUrl: 'u', proxyName: 'b'): 20,
+      };
+
+      expect(delayMapForProfile(cache, 1), {
+        'u': {'a': 10},
+      });
     });
   });
 }
