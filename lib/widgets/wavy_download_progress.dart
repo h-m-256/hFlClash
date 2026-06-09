@@ -101,7 +101,6 @@ class _WavyDownloadProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
     final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
     const startAngle = -math.pi / 2;
     final sweepAngle = progress * math.pi * 2;
 
@@ -114,34 +113,26 @@ class _WavyDownloadProgressPainter extends CustomPainter {
 
     if (sweepAngle <= 0) return;
 
-    final waveSweep = math.min(sweepAngle, math.pi / 2.7);
-    final baseSweep = math.max(0.0, sweepAngle - waveSweep);
-    final progressPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = strokeWidth;
-
-    if (baseSweep > 0) {
-      canvas.drawArc(rect, startAngle, baseSweep, false, progressPaint);
-    }
-
     final wavePaint = Paint()
-      ..color = waveColor
+      ..color = Color.alphaBlend(waveColor, color)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = strokeWidth;
     final path = Path();
-    const points = 44;
-    final waveStart = startAngle + baseSweep;
+    final safeWaveLength = math.max(1.0, waveLength);
+    final points = math.min(
+      220,
+      math.max(16, (radius * sweepAngle / 2).ceil()),
+    );
     for (var i = 0; i <= points; i++) {
       final t = i / points;
-      final angle = waveStart + waveSweep * t;
-      final distance = radius * waveSweep * t;
+      final angle = startAngle + sweepAngle * t;
+      final distance = radius * sweepAngle * t;
       final localRadius =
           radius +
-          math.sin(distance / waveLength * math.pi * 2 + phase) * waveAmplitude;
+          math.sin(distance / safeWaveLength * math.pi * 2 + phase) *
+              waveAmplitude;
       final point = Offset(
         center.dx + math.cos(angle) * localRadius,
         center.dy + math.sin(angle) * localRadius,
