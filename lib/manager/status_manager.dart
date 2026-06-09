@@ -7,6 +7,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/fade_box.dart';
 import 'package:fl_clash/widgets/theme.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,6 +22,9 @@ class StatusManager extends StatefulWidget {
 
 class StatusManagerState extends State<StatusManager> {
   final _messagesNotifier = ValueNotifier<List<CommonMessage>>([]);
+  final _progressMessagesNotifier = ValueNotifier<List<ProgressMessageState>>(
+    [],
+  );
   final _bufferMessages = Queue<CommonMessage>();
   final _activeTimers = <String, Timer>{};
   bool _isDisplayingMessage = false;
@@ -50,6 +54,32 @@ class StatusManagerState extends State<StatusManager> {
     _bufferMessages.add(commonMessage);
     commonPrint.log('message: $text');
     _processQueue();
+  }
+
+  VoidCallback progressMessage({
+    required String title,
+    required ValueListenable<DelayTestProgress> progress,
+    required VoidCallback onCancel,
+  }) {
+    final id = utils.uuidV4;
+    final state = ProgressMessageState(
+      id: id,
+      title: title,
+      progress: progress,
+      onCancel: onCancel,
+    );
+    _progressMessagesNotifier.value = [
+      ..._progressMessagesNotifier.value,
+      state,
+    ];
+    return () => _removeProgressMessage(id);
+  }
+
+  void _removeProgressMessage(String id) {
+    final next = List<ProgressMessageState>.from(
+      _progressMessagesNotifier.value,
+    )..removeWhere((message) => message.id == id);
+    _progressMessagesNotifier.value = next;
   }
 
   void _cancelMessage(String id) {
@@ -101,6 +131,7 @@ class StatusManagerState extends State<StatusManager> {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
+              _buildProgressMessages(),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: AnimatedSize(
@@ -195,6 +226,100 @@ class StatusManagerState extends State<StatusManager> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProgressMessages() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: AnimatedSize(
+        duration: animateDuration,
+        child: ValueListenableBuilder(
+          valueListenable: _progressMessagesNotifier,
+          builder: (_, messages, _) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (final message in messages)
+                  Padding(
+                    key: ValueKey(message.id),
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _ProgressMessageCard(message: message),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressMessageCard extends StatelessWidget {
+  final ProgressMessageState message;
+
+  const _ProgressMessageCard({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        return Card(
+          shape: const RoundedSuperellipseBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+          elevation: 10,
+          color: context.colorScheme.surfaceContainerHigh,
+          child: Container(
+            width: min(constraints.maxWidth, 500),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: ValueListenableBuilder(
+              valueListenable: message.progress,
+              builder: (_, progress, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            message.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.labelLarge?.copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${progress.completed.clamp(0, progress.total)}/${progress.total}',
+                          style: context.textTheme.labelMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        CommonMinFilledButtonTheme(
+                          child: FilledButton.tonal(
+                            onPressed: progress.cancelled
+                                ? null
+                                : message.onCancel,
+                            child: Text(context.appLocalizations.cancel),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(value: progress.value),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

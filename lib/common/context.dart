@@ -5,6 +5,7 @@ import 'package:fl_clash/models/state.dart';
 import 'package:fl_clash/widgets/inherited.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:fl_clash/widgets/sheet.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 extension BuildContextExtension on BuildContext {
@@ -34,6 +35,18 @@ extension BuildContextExtension on BuildContext {
     return findAncestorStateOfType<StatusManagerState>()?.message(
       text,
       actionState: actionState,
+    );
+  }
+
+  VoidCallback? showProgressNotifier({
+    required String title,
+    required ValueListenable<DelayTestProgress> progress,
+    required VoidCallback onCancel,
+  }) {
+    return findAncestorStateOfType<StatusManagerState>()?.progressMessage(
+      title: title,
+      progress: progress,
+      onCancel: onCancel,
     );
   }
 

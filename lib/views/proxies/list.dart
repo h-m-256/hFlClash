@@ -399,6 +399,7 @@ class ListHeader extends StatefulWidget {
 
 class _ListHeaderState extends State<ListHeader> {
   DelayTestTask? _delayTestTask;
+  VoidCallback? _hideProgress;
 
   String get icon => widget.group.icon;
 
@@ -418,6 +419,7 @@ class _ListHeaderState extends State<ListHeader> {
     }
 
     final task = delayTest(widget.group.all, widget.group.testUrl);
+    _showProgress(task);
     setState(() {
       _delayTestTask = task;
     });
@@ -429,7 +431,28 @@ class _ListHeaderState extends State<ListHeader> {
           _delayTestTask = null;
         });
       }
+      _hideProgress?.call();
+      _hideProgress = null;
+      task.dispose();
     }
+  }
+
+  void _showProgress(DelayTestTask task) {
+    if (!task.shouldShowProgress) return;
+    _hideProgress?.call();
+    _hideProgress = context.showProgressNotifier(
+      title: widget.group.name,
+      progress: task.progressNotifier,
+      onCancel: task.cancel,
+    );
+  }
+
+  @override
+  void dispose() {
+    _hideProgress?.call();
+    _delayTestTask?.cancel();
+    _delayTestTask?.dispose();
+    super.dispose();
   }
 
   void _handleChange(String groupName) {

@@ -4,6 +4,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 double get listHeaderHeight {
@@ -84,8 +85,13 @@ DelayTestTask delayTest(List<Proxy> proxies, [String? testUrl]) {
 }
 
 class DelayTestTask {
+  static const progressNotificationThreshold = 50;
+
   final List<Proxy> proxies;
   final String? testUrl;
+  late final ValueNotifier<DelayTestProgress> progressNotifier = ValueNotifier(
+    DelayTestProgress(completed: 0, total: proxies.length),
+  );
   late final Future<void> done = _run();
   bool _isCancelled = false;
   bool _isCompleted = false;
@@ -96,8 +102,25 @@ class DelayTestTask {
 
   bool get isActive => !_isCompleted;
 
+  int get total => proxies.length;
+
+  bool get shouldShowProgress => total >= progressNotificationThreshold;
+
   void cancel() {
     _isCancelled = true;
+    progressNotifier.value = progressNotifier.value.copyWith(cancelled: true);
+  }
+
+  void dispose() {
+    progressNotifier.dispose();
+  }
+
+  void _increaseProgress() {
+    final value = progressNotifier.value;
+    progressNotifier.value = value.copyWith(
+      completed: (value.completed + 1).clamp(0, value.total),
+      cancelled: _isCancelled,
+    );
   }
 
   Future<void> _run() async {
@@ -105,7 +128,13 @@ class DelayTestTask {
       for (final batch in proxies.batch(100)) {
         if (_isCancelled) return;
         await Future.wait(
-          batch.map((proxy) async => proxyDelayTest(proxy, testUrl, this)),
+          batch.map((proxy) async {
+            try {
+              await proxyDelayTest(proxy, testUrl, this);
+            } finally {
+              _increaseProgress();
+            }
+          }),
         );
       }
       if (!_isCancelled) {

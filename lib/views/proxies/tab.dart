@@ -393,6 +393,7 @@ class DelayTestButton extends StatefulWidget {
 
 class _DelayTestButtonState extends State<DelayTestButton> {
   DelayTestTask? _task;
+  VoidCallback? _hideProgress;
 
   bool get _isTesting => _task?.isActive == true;
 
@@ -405,6 +406,7 @@ class _DelayTestButtonState extends State<DelayTestButton> {
 
     final task = widget.onStart();
     if (task == null) return;
+    _showProgress(task);
     setState(() {
       _task = task;
     });
@@ -416,7 +418,28 @@ class _DelayTestButtonState extends State<DelayTestButton> {
           _task = null;
         });
       }
+      _hideProgress?.call();
+      _hideProgress = null;
+      task.dispose();
     }
+  }
+
+  void _showProgress(DelayTestTask task) {
+    if (!task.shouldShowProgress) return;
+    _hideProgress?.call();
+    _hideProgress = context.showProgressNotifier(
+      title: context.appLocalizations.delayTest,
+      progress: task.progressNotifier,
+      onCancel: task.cancel,
+    );
+  }
+
+  @override
+  void dispose() {
+    _hideProgress?.call();
+    _task?.cancel();
+    _task?.dispose();
+    super.dispose();
   }
 
   @override
