@@ -822,6 +822,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),
     "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("ホストを使用"),
+    "useSystemFonts": MessageLookupByLibrary.simpleMessage("システムフォントを使用"),
+    "useSystemFontsDesc": MessageLookupByLibrary.simpleMessage(
+      "利用可能な場合はプラットフォームのフォントを使用します。オフにすると内蔵フォールバックフォントを使用します。",
+    ),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムホストを使用"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "userAgentDesc": MessageLookupByLibrary.simpleMessage("この購読の更新時に送信されます"),

@@ -85,6 +85,8 @@
   "profileAutoUpdateIntervalInvalidValidationDesc": "有効な間隔形式を入力してください",
   "themeMode": "テーマモード",
   "themeColor": "テーマカラー",
+  "useSystemFonts": "システムフォントを使用",
+  "useSystemFontsDesc": "利用可能な場合はプラットフォームのフォントを使用します。オフにすると内蔵フォールバックフォントを使用します。",
   "preview": "プレビュー",
   "auto": "自動",
   "light": "ライト",

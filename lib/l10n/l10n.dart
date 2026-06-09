@@ -689,6 +689,26 @@ class AppLocalizations {
     return Intl.message('Theme color', name: 'themeColor', desc: '', args: []);
   }
 
+  /// `Use system fonts`
+  String get useSystemFonts {
+    return Intl.message(
+      'Use system fonts',
+      name: 'useSystemFonts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use platform fonts when available. Turn off to use the bundled fallback font.`
+  String get useSystemFontsDesc {
+    return Intl.message(
+      'Use platform fonts when available. Turn off to use the bundled fallback font.',
+      name: 'useSystemFontsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Preview`
   String get preview {
     return Intl.message('Preview', name: 'preview', desc: '', args: []);

@@ -1081,6 +1081,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
+    "useSystemFonts": MessageLookupByLibrary.simpleMessage(
+      "Использовать системные шрифты",
+    ),
+    "useSystemFontsDesc": MessageLookupByLibrary.simpleMessage(
+      "Использовать шрифты платформы, если доступны. Выключите, чтобы использовать встроенный fallback-шрифт.",
+    ),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системные hosts",
     ),

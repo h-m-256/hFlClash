@@ -38,3 +38,4 @@ export 'tab.dart';
 export 'text.dart';
 export 'theme.dart';
 export 'wave.dart';
+export 'wavy_download_progress.dart';

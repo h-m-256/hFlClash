@@ -8,6 +8,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/fade_box.dart';
 import 'package:fl_clash/widgets/theme.dart';
+import 'package:fl_clash/widgets/wavy_download_progress.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -301,21 +302,44 @@ class _ProgressMessageCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            message.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.labelLarge?.copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
+                        WavyDownloadProgress(
+                          progress: progress.value,
+                          size: 44,
+                          strokeWidth: 4,
+                          color: context.colorScheme.primary,
+                          waveColor: context.colorScheme.primary,
+                          trackColor:
+                              context.colorScheme.surfaceContainerHighest,
+                          waveAmplitude: 1.8,
+                          waveLength: 10,
+                          child: Icon(
+                            Icons.network_ping,
+                            size: 18,
+                            color: context.colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          '${progress.completed.clamp(0, progress.total)}/${progress.total}',
-                          style: context.textTheme.labelMedium?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                message.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.labelLarge?.copyWith(
+                                  color: context.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${progress.completed.clamp(0, progress.total)}/${progress.total}',
+                                style: context.textTheme.labelMedium?.copyWith(
+                                  color: context.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                         if (!progress.cancelled) ...[
@@ -329,8 +353,6 @@ class _ProgressMessageCard extends StatelessWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(value: progress.value),
                   ],
                 );
               },

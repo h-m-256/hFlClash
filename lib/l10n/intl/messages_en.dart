@@ -1020,6 +1020,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
+    "useSystemFonts": MessageLookupByLibrary.simpleMessage("Use system fonts"),
+    "useSystemFontsDesc": MessageLookupByLibrary.simpleMessage(
+      "Use platform fonts when available. Turn off to use the bundled fallback font.",
+    ),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "userAgentDesc": MessageLookupByLibrary.simpleMessage(

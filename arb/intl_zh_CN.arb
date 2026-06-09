@@ -85,6 +85,8 @@
   "profileAutoUpdateIntervalInvalidValidationDesc": "请输入有效间隔时间格式",
   "themeMode": "主题模式",
   "themeColor": "主题色彩",
+  "useSystemFonts": "使用系统字体",
+  "useSystemFontsDesc": "可用时使用平台字体。关闭后使用内置备用字体。",
   "preview": "预览",
   "auto": "自动",
   "light": "浅色",

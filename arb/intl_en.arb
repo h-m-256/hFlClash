@@ -85,6 +85,8 @@
   "profileAutoUpdateIntervalInvalidValidationDesc": "Please input a valid interval time format",
   "themeMode": "Theme mode",
   "themeColor": "Theme color",
+  "useSystemFonts": "Use system fonts",
+  "useSystemFontsDesc": "Use platform fonts when available. Turn off to use the bundled fallback font.",
   "preview": "Preview",
   "auto": "Auto",
   "light": "Light",

@@ -48,6 +48,8 @@ class ThemeView extends StatelessWidget {
           SliverToBoxAdapter(child: SizedBox(height: 16)),
           _PrueBlackItem(),
           SliverToBoxAdapter(child: SizedBox(height: 16)),
+          _SystemFontsItem(),
+          SliverToBoxAdapter(child: SizedBox(height: 16)),
           _TextScaleFactorItem(),
           SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
@@ -443,6 +445,39 @@ class _PrueBlackItem extends ConsumerWidget {
             ref
                 .read(themeSettingProvider.notifier)
                 .update((state) => state.copyWith(pureBlack: value));
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SystemFontsItem extends ConsumerWidget {
+  const _SystemFontsItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appLocalizations = context.appLocalizations;
+    final useSystemFonts = ref.watch(
+      themeSettingProvider.select((state) => state.useSystemFonts),
+    );
+    return SliverToBoxAdapter(
+      child: ListItem.switchItem(
+        leading: const Icon(Icons.font_download_outlined),
+        horizontalTitleGap: 12,
+        title: Text(
+          appLocalizations.useSystemFonts,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        subtitle: Text(appLocalizations.useSystemFontsDesc),
+        delegate: SwitchDelegate(
+          value: useSystemFonts,
+          onChanged: (value) {
+            ref
+                .read(themeSettingProvider.notifier)
+                .update((state) => state.copyWith(useSystemFonts: value));
           },
         ),
       ),

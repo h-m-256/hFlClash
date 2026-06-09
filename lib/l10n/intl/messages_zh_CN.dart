@@ -710,6 +710,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
     "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
+    "useSystemFonts": MessageLookupByLibrary.simpleMessage("使用系统字体"),
+    "useSystemFontsDesc": MessageLookupByLibrary.simpleMessage(
+      "可用时使用平台字体。关闭后使用内置备用字体。",
+    ),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "userAgentDesc": MessageLookupByLibrary.simpleMessage("更新此订阅时发送"),

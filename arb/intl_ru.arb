@@ -85,6 +85,8 @@
   "profileAutoUpdateIntervalInvalidValidationDesc": "Пожалуйста, введите действительный формат интервала времени",
   "themeMode": "Режим темы",
   "themeColor": "Цвет темы",
+  "useSystemFonts": "Использовать системные шрифты",
+  "useSystemFontsDesc": "Использовать шрифты платформы, если доступны. Выключите, чтобы использовать встроенный fallback-шрифт.",
   "preview": "Предпросмотр",
   "auto": "Авто",
   "light": "Светлый",
