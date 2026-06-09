@@ -48,7 +48,12 @@ void updateCurrentUnfoldSet(Set<String> value) {
       .updateCurrentUnfoldSet(value);
 }
 
-Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
+Future<void> proxyDelayTest(
+  Proxy proxy, [
+  String? testUrl,
+  DelayTestTask? task,
+]) async {
+  if (task?.isCancelled == true) return;
   final ref = globalState.container;
   final groups = getGroups();
   final selectedMap = ref.read(
@@ -65,24 +70,51 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
   if (state.proxyName.isEmpty) {
     return;
   }
+  if (task?.isCancelled == true) return;
   ref
       .read(proxiesActionProvider.notifier)
       .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: 0));
-  ref
-      .read(proxiesActionProvider.notifier)
-      .setDelay(await coreController.getDelay(currentTestUrl, state.proxyName));
+  final delay = await coreController.getDelay(currentTestUrl, state.proxyName);
+  if (task?.isCancelled == true) return;
+  ref.read(proxiesActionProvider.notifier).setDelay(delay);
 }
 
-Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
-  final delayProxies = proxies.map<Future>((proxy) async {
-    await proxyDelayTest(proxy, testUrl);
-  }).toList();
+DelayTestTask delayTest(List<Proxy> proxies, [String? testUrl]) {
+  return DelayTestTask._(proxies, testUrl);
+}
 
-  final batchesDelayProxies = delayProxies.batch(100);
-  for (final batchDelayProxies in batchesDelayProxies) {
-    await Future.wait(batchDelayProxies);
+class DelayTestTask {
+  final List<Proxy> proxies;
+  final String? testUrl;
+  late final Future<void> done = _run();
+  bool _isCancelled = false;
+  bool _isCompleted = false;
+
+  DelayTestTask._(this.proxies, this.testUrl);
+
+  bool get isCancelled => _isCancelled;
+
+  bool get isActive => !_isCompleted;
+
+  void cancel() {
+    _isCancelled = true;
   }
-  globalState.container.read(sortNumProvider.notifier).add();
+
+  Future<void> _run() async {
+    try {
+      for (final batch in proxies.batch(100)) {
+        if (_isCancelled) return;
+        await Future.wait(
+          batch.map((proxy) async => proxyDelayTest(proxy, testUrl, this)),
+        );
+      }
+      if (!_isCancelled) {
+        globalState.container.read(sortNumProvider.notifier).add();
+      }
+    } finally {
+      _isCompleted = true;
+    }
+  }
 }
 
 double getScrollToSelectedOffset({

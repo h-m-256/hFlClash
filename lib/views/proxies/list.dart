@@ -398,7 +398,7 @@ class ListHeader extends StatefulWidget {
 }
 
 class _ListHeaderState extends State<ListHeader> {
-  var isLock = false;
+  DelayTestTask? _delayTestTask;
 
   String get icon => widget.group.icon;
 
@@ -408,11 +408,28 @@ class _ListHeaderState extends State<ListHeader> {
 
   bool get isExpand => widget.isExpand;
 
+  bool get isDelayTesting => _delayTestTask?.isActive == true;
+
   Future<void> _delayTest() async {
-    if (isLock) return;
-    isLock = true;
-    await delayTest(widget.group.all, widget.group.testUrl);
-    isLock = false;
+    if (isDelayTesting) {
+      _delayTestTask?.cancel();
+      setState(() {});
+      return;
+    }
+
+    final task = delayTest(widget.group.all, widget.group.testUrl);
+    setState(() {
+      _delayTestTask = task;
+    });
+    try {
+      await task.done;
+    } finally {
+      if (mounted && identical(_delayTestTask, task)) {
+        setState(() {
+          _delayTestTask = null;
+        });
+      }
+    }
   }
 
   void _handleChange(String groupName) {
@@ -573,7 +590,9 @@ class _ListHeaderState extends State<ListHeader> {
                     style: const ButtonStyle(
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    icon: const Icon(Icons.network_ping),
+                    icon: Icon(
+                      isDelayTesting ? Icons.close : Icons.network_ping,
+                    ),
                   ),
                   const SizedBox(width: 6),
                 ] else

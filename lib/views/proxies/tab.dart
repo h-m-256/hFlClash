@@ -59,10 +59,10 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
     _keyMap[currentGroupName]?.currentState?.scrollToSelected();
   }
 
-  Future<void> delayTestCurrentGroup() async {
+  DelayTestTask? startDelayTestCurrentGroup() {
     final group = _getCurrentGroup();
-    if (group == null) return;
-    await delayTest(group.all, group.testUrl);
+    if (group == null) return null;
+    return delayTest(group.all, group.testUrl);
   }
 
   Group? _getCurrentGroup() {
@@ -383,67 +383,49 @@ class _ProxyGroupViewState extends ConsumerState<ProxyGroupView> {
 }
 
 class DelayTestButton extends StatefulWidget {
-  final Future Function() onClick;
+  final DelayTestTask? Function() onStart;
 
-  const DelayTestButton({super.key, required this.onClick});
+  const DelayTestButton({super.key, required this.onStart});
 
   @override
   State<DelayTestButton> createState() => _DelayTestButtonState();
 }
 
-class _DelayTestButtonState extends State<DelayTestButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _DelayTestButtonState extends State<DelayTestButton> {
+  DelayTestTask? _task;
 
-  Future<void> _healthcheck() async {
-    if (_controller.isAnimating) {
+  bool get _isTesting => _task?.isActive == true;
+
+  Future<void> _handlePressed() async {
+    if (_isTesting) {
+      _task?.cancel();
+      setState(() {});
       return;
     }
-    _controller.forward();
+
+    final task = widget.onStart();
+    if (task == null) return;
+    setState(() {
+      _task = task;
+    });
     try {
-      await widget.onClick();
+      await task.done;
     } finally {
-      if (mounted) {
-        _controller.reverse();
+      if (mounted && identical(_task, task)) {
+        setState(() {
+          _task = null;
+        });
       }
     }
   }
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _animation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    return AnimatedBuilder(
-      animation: _controller.view,
-      builder: (_, child) {
-        return FadeTransition(
-          opacity: _animation,
-          child: ScaleTransition(scale: _animation, child: child),
-        );
-      },
-      child: CommonFloatingActionButton(
-        onPressed: _healthcheck,
-        label: appLocalizations.delayTest,
-        icon: const Icon(Icons.network_ping),
-      ),
+    return CommonFloatingActionButton(
+      onPressed: _handlePressed,
+      label: _isTesting ? appLocalizations.cancel : appLocalizations.delayTest,
+      icon: Icon(_isTesting ? Icons.close : Icons.network_ping),
     );
   }
 }

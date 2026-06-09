@@ -85,8 +85,8 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   Widget? _buildFAB() {
     return _isTab
         ? DelayTestButton(
-            onClick: () async {
-              await _proxiesTabKey.currentState?.delayTestCurrentGroup();
+            onStart: () {
+              return _proxiesTabKey.currentState?.startDelayTestCurrentGroup();
             },
           )
         : null;
