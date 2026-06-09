@@ -60,9 +60,28 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
   }
 
   Future<void> delayTestCurrentGroup() async {
+    final group = _getCurrentGroup();
+    if (group == null) return;
+    await delayTest(group.all, group.testUrl);
+  }
+
+  Group? _getCurrentGroup() {
+    final groups = getCurrentGroups();
+    if (groups.isEmpty) return null;
+
     final currentGroupName = getCurrentGroupName();
-    final currentState = _keyMap[currentGroupName]?.currentState;
-    await delayTest(currentState?.currentProxies ?? [], currentState?.testUrl);
+    if (currentGroupName != null) {
+      final index = groups.indexWhere(
+        (group) => group.name == currentGroupName,
+      );
+      if (index != -1) return groups[index];
+    }
+
+    final tabIndex = _tabController?.index;
+    if (tabIndex != null && tabIndex >= 0 && tabIndex < groups.length) {
+      return groups[tabIndex];
+    }
+    return groups.first;
   }
 
   Widget _buildMoreButton() {
@@ -136,7 +155,7 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
         groupIndex = currentIndex;
       }
       final currentGroups = getCurrentGroups();
-      if (groupIndex == null || groupIndex > currentGroups.length) {
+      if (groupIndex == null || groupIndex >= currentGroups.length) {
         return;
       }
       final currentGroup = currentGroups[groupIndex];
@@ -382,9 +401,12 @@ class _DelayTestButtonState extends State<DelayTestButton>
       return;
     }
     _controller.forward();
-    await widget.onClick();
-    if (mounted) {
-      _controller.reverse();
+    try {
+      await widget.onClick();
+    } finally {
+      if (mounted) {
+        _controller.reverse();
+      }
     }
   }
 
