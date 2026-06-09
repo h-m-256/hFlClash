@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/fade_box.dart';
@@ -230,28 +231,38 @@ class StatusManagerState extends State<StatusManager> {
   }
 
   Widget _buildProgressMessages() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: AnimatedSize(
-        duration: animateDuration,
-        child: ValueListenableBuilder(
-          valueListenable: _progressMessagesNotifier,
-          builder: (_, messages, _) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (final message in messages)
-                  Padding(
-                    key: ValueKey(message.id),
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _ProgressMessageCard(message: message),
-                  ),
-              ],
-            );
-          },
-        ),
-      ),
+    return Consumer(
+      builder: (_, ref, _) {
+        final isProxiesPage = ref.watch(
+          currentPageLabelProvider.select(
+            (state) => state == PageLabel.proxies,
+          ),
+        );
+        if (!isProxiesPage) return const SizedBox();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: AnimatedSize(
+            duration: animateDuration,
+            child: ValueListenableBuilder(
+              valueListenable: _progressMessagesNotifier,
+              builder: (_, messages, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (final message in messages)
+                      Padding(
+                        key: ValueKey(message.id),
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _ProgressMessageCard(message: message),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 }

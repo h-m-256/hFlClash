@@ -397,10 +397,16 @@ class _DelayTestButtonState extends State<DelayTestButton> {
 
   bool get _isTesting => _task?.isActive == true;
 
+  bool get _isCancelling => _isTesting && _task?.isCancelled == true;
+
+  void _cancelTask() {
+    _task?.cancel();
+    if (mounted) setState(() {});
+  }
+
   Future<void> _handlePressed() async {
     if (_isTesting) {
-      _task?.cancel();
-      setState(() {});
+      if (!_isCancelling) _cancelTask();
       return;
     }
 
@@ -430,7 +436,7 @@ class _DelayTestButtonState extends State<DelayTestButton> {
     _hideProgress = context.showProgressNotifier(
       title: context.appLocalizations.delayTest,
       progress: task.progressNotifier,
-      onCancel: task.cancel,
+      onCancel: _cancelTask,
     );
   }
 
@@ -446,7 +452,7 @@ class _DelayTestButtonState extends State<DelayTestButton> {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     return CommonFloatingActionButton(
-      onPressed: _handlePressed,
+      onPressed: _isCancelling ? null : _handlePressed,
       label: _isTesting ? appLocalizations.cancel : appLocalizations.delayTest,
       icon: Icon(_isTesting ? Icons.close : Icons.network_ping),
     );

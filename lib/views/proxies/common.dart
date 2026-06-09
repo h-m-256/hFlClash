@@ -85,8 +85,6 @@ DelayTestTask delayTest(List<Proxy> proxies, [String? testUrl]) {
 }
 
 class DelayTestTask {
-  static const progressNotificationThreshold = 50;
-
   final List<Proxy> proxies;
   final String? testUrl;
   late final ValueNotifier<DelayTestProgress> progressNotifier = ValueNotifier(
@@ -104,7 +102,7 @@ class DelayTestTask {
 
   int get total => proxies.length;
 
-  bool get shouldShowProgress => total >= progressNotificationThreshold;
+  bool get shouldShowProgress => total > 0;
 
   void cancel() {
     _isCancelled = true;

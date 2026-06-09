@@ -411,10 +411,17 @@ class _ListHeaderState extends State<ListHeader> {
 
   bool get isDelayTesting => _delayTestTask?.isActive == true;
 
+  bool get isDelayCancelling =>
+      isDelayTesting && _delayTestTask?.isCancelled == true;
+
+  void _cancelDelayTest() {
+    _delayTestTask?.cancel();
+    if (mounted) setState(() {});
+  }
+
   Future<void> _delayTest() async {
     if (isDelayTesting) {
-      _delayTestTask?.cancel();
-      setState(() {});
+      if (!isDelayCancelling) _cancelDelayTest();
       return;
     }
 
@@ -443,7 +450,7 @@ class _ListHeaderState extends State<ListHeader> {
     _hideProgress = context.showProgressNotifier(
       title: widget.group.name,
       progress: task.progressNotifier,
-      onCancel: task.cancel,
+      onCancel: _cancelDelayTest,
     );
   }
 
@@ -609,7 +616,7 @@ class _ListHeaderState extends State<ListHeader> {
                     iconSize: 20,
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.all(2),
-                    onPressed: _delayTest,
+                    onPressed: isDelayCancelling ? null : _delayTest,
                     style: const ButtonStyle(
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
