@@ -612,17 +612,27 @@ class _ListHeaderState extends State<ListHeader> {
                     icon: const Icon(Icons.adjust),
                   ),
                   const SizedBox(width: 2),
-                  IconButton(
-                    iconSize: 20,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.all(2),
-                    onPressed: isDelayCancelling ? null : _delayTest,
-                    style: const ButtonStyle(
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    icon: Icon(
-                      isDelayTesting ? Icons.close : Icons.network_ping,
-                    ),
+                  AnimatedSwitcher(
+                    duration: commonDuration,
+                    child: isDelayCancelling
+                        ? const SizedBox(
+                            key: ValueKey('cancelling'),
+                            width: 28,
+                            height: 28,
+                          )
+                        : IconButton(
+                            key: ValueKey(isDelayTesting),
+                            iconSize: 20,
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.all(2),
+                            onPressed: _delayTest,
+                            style: const ButtonStyle(
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            icon: Icon(
+                              isDelayTesting ? Icons.close : Icons.network_ping,
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 6),
                 ] else

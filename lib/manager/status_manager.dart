@@ -231,38 +231,45 @@ class StatusManagerState extends State<StatusManager> {
   }
 
   Widget _buildProgressMessages() {
-    return Consumer(
-      builder: (_, ref, _) {
-        final isProxiesPage = ref.watch(
-          currentPageLabelProvider.select(
-            (state) => state == PageLabel.proxies,
-          ),
-        );
-        if (!isProxiesPage) return const SizedBox();
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: AnimatedSize(
-            duration: animateDuration,
-            child: ValueListenableBuilder(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: AnimatedSize(
+        duration: animateDuration,
+        child: Consumer(
+          builder: (_, ref, _) {
+            final isProxiesPage = ref.watch(
+              currentPageLabelProvider.select(
+                (state) => state == PageLabel.proxies,
+              ),
+            );
+            return ValueListenableBuilder(
               valueListenable: _progressMessagesNotifier,
               builder: (_, messages, _) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    for (final message in messages)
-                      Padding(
-                        key: ValueKey(message.id),
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _ProgressMessageCard(message: message),
-                      ),
-                  ],
+                final visibleMessages = isProxiesPage
+                    ? messages
+                    : const <ProgressMessageState>[];
+                return FadeThroughBox(
+                  alignment: Alignment.centerRight,
+                  child: visibleMessages.isEmpty
+                      ? const SizedBox()
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            for (final message in visibleMessages)
+                              Padding(
+                                key: ValueKey(message.id),
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _ProgressMessageCard(message: message),
+                              ),
+                          ],
+                        ),
                 );
               },
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -311,15 +318,15 @@ class _ProgressMessageCard extends StatelessWidget {
                             color: context.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        CommonMinFilledButtonTheme(
-                          child: FilledButton.tonal(
-                            onPressed: progress.cancelled
-                                ? null
-                                : message.onCancel,
-                            child: Text(context.appLocalizations.cancel),
+                        if (!progress.cancelled) ...[
+                          const SizedBox(width: 12),
+                          CommonMinFilledButtonTheme(
+                            child: FilledButton.tonal(
+                              onPressed: message.onCancel,
+                              child: Text(context.appLocalizations.cancel),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 8),

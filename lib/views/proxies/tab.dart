@@ -451,10 +451,18 @@ class _DelayTestButtonState extends State<DelayTestButton> {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    return CommonFloatingActionButton(
-      onPressed: _isCancelling ? null : _handlePressed,
-      label: _isTesting ? appLocalizations.cancel : appLocalizations.delayTest,
-      icon: Icon(_isTesting ? Icons.close : Icons.network_ping),
+    return AnimatedSwitcher(
+      duration: commonDuration,
+      child: _isCancelling
+          ? const SizedBox(key: ValueKey('cancelling'))
+          : CommonFloatingActionButton(
+              key: ValueKey(_isTesting),
+              onPressed: _handlePressed,
+              label: _isTesting
+                  ? appLocalizations.cancel
+                  : appLocalizations.delayTest,
+              icon: Icon(_isTesting ? Icons.close : Icons.network_ping),
+            ),
     );
   }
 }
