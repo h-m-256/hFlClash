@@ -1,5 +1,4 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -47,33 +46,6 @@ class UsageItem extends ConsumerWidget {
           ref
               .read(appSettingProvider.notifier)
               .update((state) => state.copyWith(onlyStatisticsProxy: value));
-        },
-      ),
-    );
-  }
-}
-
-class SaveDelayHistoryItem extends ConsumerWidget {
-  const SaveDelayHistoryItem({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appLocalizations = context.appLocalizations;
-    final saveDelayHistory = ref.watch(
-      appSettingProvider.select((state) => state.saveDelayHistory),
-    );
-    return ListItem.switchItem(
-      title: Text(appLocalizations.saveDelayHistory),
-      subtitle: Text(appLocalizations.saveDelayHistoryDesc),
-      delegate: SwitchDelegate(
-        value: saveDelayHistory,
-        onChanged: (bool value) {
-          ref
-              .read(appSettingProvider.notifier)
-              .update((state) => state.copyWith(saveDelayHistory: value));
-          if (!value) {
-            ref.read(delayDataSourceProvider.notifier).clearAllPersisted();
-          }
         },
       ),
     );
@@ -303,17 +275,13 @@ class ApplicationSettingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Widget> items = [
       const MinimizeItem(),
-      if (system.isDesktop) ...[
-        const AutoLaunchItem(),
-        const SilentLaunchItem(),
-      ],
+      if (system.isDesktop) ...[const AutoLaunchItem(), const SilentLaunchItem()],
       const AutoRunItem(),
       if (system.isAndroid) ...[const HiddenItem()],
       const AnimateTabItem(),
       const OpenLogsItem(),
       const CloseConnectionsItem(),
       const UsageItem(),
-      const SaveDelayHistoryItem(),
       if (system.isAndroid) const CrashlyticsItem(),
       const AutoCheckUpdateItem(),
     ];
