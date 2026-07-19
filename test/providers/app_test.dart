@@ -359,13 +359,24 @@ void main() {
         addTearDown(container.dispose);
 
         final notifier = container.read(networkDetectionProvider.notifier);
+        final newerCheckSucceeded = Completer<void>();
+        final subscription = container.listen(networkDetectionProvider, (
+          _,
+          state,
+        ) {
+          if (!state.isLoading &&
+              state.ipInfo?.ip == '2.2.2.2' &&
+              !newerCheckSucceeded.isCompleted) {
+            newerCheckSucceeded.complete();
+          }
+        });
+        addTearDown(subscription.close);
+
         notifier.startCheck();
         await Future.delayed(commonDuration + const Duration(milliseconds: 50));
 
         notifier.startCheck();
-        await Future.delayed(
-          commonDuration + const Duration(milliseconds: 120),
-        );
+        await newerCheckSucceeded.future.timeout(const Duration(seconds: 5));
 
         expect(container.read(networkDetectionProvider).ipInfo?.ip, '2.2.2.2');
         expect(container.read(networkDetectionProvider).isLoading, false);
