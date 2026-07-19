@@ -91,7 +91,7 @@ final class SetupActionProvider extends $NotifierProvider<SetupAction, void> {
   }
 }
 
-String _$setupActionHash() => r'e4b4e963be3e36b441ce5f4dc741e7650f7b2fee';
+String _$setupActionHash() => r'c6c7b3b5d90f5070dca9ed02e51dcc06f812a294';
 
 abstract class _$SetupAction extends $Notifier<void> {
   void build();
@@ -244,7 +244,7 @@ final class SystemActionProvider extends $NotifierProvider<SystemAction, void> {
   }
 }
 
-String _$systemActionHash() => r'579650623bcc9263528fc0ac1f91b3d83bdc45e3';
+String _$systemActionHash() => r'04f09af2702925aff276423a9c224fd8d3aca061';
 
 abstract class _$SystemAction extends $Notifier<void> {
   void build();
@@ -450,9 +450,61 @@ final class ProfilesActionProvider
   }
 }
 
-String _$profilesActionHash() => r'777dba092bce089d27b8dd8b11654e3db3a2e629';
+String _$profilesActionHash() => r'7a66794959681024e6c2f34293f7225247234b6f';
 
 abstract class _$ProfilesAction extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(GeoResourceAction)
+final geoResourceActionProvider = GeoResourceActionProvider._();
+
+final class GeoResourceActionProvider
+    extends $NotifierProvider<GeoResourceAction, void> {
+  GeoResourceActionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'geoResourceActionProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$geoResourceActionHash();
+
+  @$internal
+  @override
+  GeoResourceAction create() => GeoResourceAction();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$geoResourceActionHash() => r'980385b1cc4e685e0e2732471083c63d29b59c10';
+
+abstract class _$GeoResourceAction extends $Notifier<void> {
   void build();
   @$mustCallSuper
   @override

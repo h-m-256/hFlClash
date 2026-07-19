@@ -58,6 +58,7 @@ class AddProfileView extends StatelessWidget {
         title: appLocalizations.importFromURL,
         labelText: appLocalizations.url,
         value: '',
+        inputFormatters: TextInputLimits.limit(TextInputLimits.url),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return appLocalizations.emptyTip('').trim();
@@ -303,6 +304,7 @@ class _URLFormDialogState extends State<URLFormDialog> {
               keyboardType: TextInputType.url,
               minLines: 1,
               maxLines: 5,
+              inputFormatters: TextInputLimits.limit(TextInputLimits.url),
               onSubmitted: (_) {
                 _handleAddProfileFormURL();
               },
