@@ -292,7 +292,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Custom subscription",
     ),
     "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
-      "Convert share links locally and use a custom User-Agent",
+      "Xray JSON, share links, Base64, happ://crypt, and other encrypted formats",
     ),
     "cut": MessageLookupByLibrary.simpleMessage("Cut"),
     "dark": MessageLookupByLibrary.simpleMessage("Dark"),
@@ -565,6 +565,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "messageTest": MessageLookupByLibrary.simpleMessage("Message test"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage(
       "This is a message.",
+    ),
+    "mihomoFormat": MessageLookupByLibrary.simpleMessage(
+      "Mihomo (Clash) format",
     ),
     "min": MessageLookupByLibrary.simpleMessage("Min"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage("Minimize on exit"),

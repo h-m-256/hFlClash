@@ -8,6 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.12.0"
+hpwnr = { git = "https://github.com/Omegaplexx/hpwnr.git", rev = "3745cb96e2551e003cb217ab7705b4d67f8ac006" }
 interprocess = "2"
 
 [target.'cfg(unix)'.dependencies]

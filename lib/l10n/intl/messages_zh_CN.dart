@@ -206,7 +206,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "custom": MessageLookupByLibrary.simpleMessage("自定义"),
     "customSubscription": MessageLookupByLibrary.simpleMessage("自定义订阅"),
     "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
-      "本地转换分享链接并使用自定义 User-Agent",
+      "支持 Xray JSON、分享链接、Base64、happ://crypt 及其他加密格式",
     ),
     "cut": MessageLookupByLibrary.simpleMessage("剪切"),
     "dark": MessageLookupByLibrary.simpleMessage("深色"),
@@ -396,6 +396,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "memoryInfo": MessageLookupByLibrary.simpleMessage("内存信息"),
     "messageTest": MessageLookupByLibrary.simpleMessage("消息测试"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage("这是一条消息。"),
+    "mihomoFormat": MessageLookupByLibrary.simpleMessage("Mihomo (Clash) 格式"),
     "min": MessageLookupByLibrary.simpleMessage("最小"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage("退出时最小化"),
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage("修改系统默认退出事件"),

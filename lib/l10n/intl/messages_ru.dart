@@ -297,7 +297,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Нестандартная подписка",
     ),
     "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
-      "Локальная конвертация ссылок и отдельный User-Agent",
+      "Xray JSON, обычные ссылки, Base64, happ://crypt и другие виды шифрования",
     ),
     "cut": MessageLookupByLibrary.simpleMessage("Вырезать"),
     "dark": MessageLookupByLibrary.simpleMessage("Темный"),
@@ -589,6 +589,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Тестирование сообщения",
     ),
     "messageTestTip": MessageLookupByLibrary.simpleMessage("Это сообщение."),
+    "mihomoFormat": MessageLookupByLibrary.simpleMessage(
+      "Mihomo (Clash) формат",
+    ),
     "min": MessageLookupByLibrary.simpleMessage("Мин"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage(
       "Свернуть при выходе",

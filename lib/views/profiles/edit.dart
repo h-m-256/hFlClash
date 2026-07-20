@@ -318,7 +318,8 @@ class _EditProfileViewState extends State<EditProfileView> {
               }
               if (!value.isUrl &&
                   (_showSubscriptionOptions == false ||
-                      !subscriptionConverter.canConvert(value))) {
+                      (!value.isResolvableSubscriptionInput &&
+                          !subscriptionConverter.canConvert(value)))) {
                 return appLocalizations.profileUrlInvalidValidationDesc;
               }
               return null;

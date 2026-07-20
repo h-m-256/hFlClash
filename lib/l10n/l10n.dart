@@ -484,6 +484,16 @@ class AppLocalizations {
     return Intl.message('URL', name: 'url', desc: '', args: []);
   }
 
+  /// `Mihomo (Clash) format`
+  String get mihomoFormat {
+    return Intl.message(
+      'Mihomo (Clash) format',
+      name: 'mihomoFormat',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Obtain profile through URL`
   String get urlDesc {
     return Intl.message(
@@ -504,10 +514,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Convert share links locally and use a custom User-Agent`
+  /// `Xray JSON, share links, Base64, happ://crypt, and other encrypted formats`
   String get customSubscriptionDesc {
     return Intl.message(
-      'Convert share links locally and use a custom User-Agent',
+      'Xray JSON, share links, Base64, happ://crypt, and other encrypted formats',
       name: 'customSubscriptionDesc',
       desc: '',
       args: [],

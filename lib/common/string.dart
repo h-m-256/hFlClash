@@ -4,6 +4,11 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:fl_clash/common/common.dart';
 
+final _resolvableSubscriptionInputRegExp = RegExp(
+  r'^(?:happ://(?:add|crypt[2-5]?)/|v2raytun://(?:crypt|import)/|incy://(?:add|import)/).+',
+  caseSensitive: false,
+);
+
 extension StringExtension on String {
   bool get isUrl {
     final uri = Uri.tryParse(this);
@@ -13,6 +18,9 @@ extension StringExtension on String {
             uri.scheme == 'ftp') &&
         uri.host.isNotEmpty;
   }
+
+  bool get isResolvableSubscriptionInput =>
+      _resolvableSubscriptionInputRegExp.hasMatch(trim());
 
   dynamic get splitByMultipleSeparators {
     final parts = split(

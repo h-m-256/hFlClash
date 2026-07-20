@@ -98,6 +98,7 @@ void main() {
         isTrue,
       );
       expect(converter.canConvert('https://example.com/sub'), isFalse);
+      expect(converter.canConvert('happ://crypt/payload'), isFalse);
     });
 
     test('skips malformed links when valid links exist', () {

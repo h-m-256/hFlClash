@@ -104,7 +104,7 @@ class AddProfileView extends StatelessWidget {
         ),
         ListItem(
           leading: const Icon(Icons.cloud_download_sharp),
-          title: Text(appLocalizations.url),
+          title: Text(appLocalizations.mihomoFormat),
           subtitle: Text(appLocalizations.urlDesc),
           onTap: _toAdd,
         ),
@@ -212,7 +212,9 @@ class _CustomSubscriptionDialogState extends State<CustomSubscriptionDialog> {
                 if (value == null || value.isEmpty) {
                   return appLocalizations.emptyTip('').trim();
                 }
-                if (!value.isUrl && !subscriptionConverter.canConvert(value)) {
+                if (!value.isUrl &&
+                    !value.isResolvableSubscriptionInput &&
+                    !subscriptionConverter.canConvert(value)) {
                   return appLocalizations.urlTip('').trim();
                 }
                 return null;

@@ -10,25 +10,28 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rust_api/rust_api.dart';
 
 class Request {
   late final Dio dio;
   late final Dio _clashDio;
   String? userAgent;
 
-  Request() {
+  Request({Dio? clashDio}) {
     dio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
-    _clashDio = Dio();
-    _clashDio.httpClientAdapter = IOHttpClientAdapter(
-      createHttpClient: () {
-        final client = HttpClient();
-        client.findProxy = (Uri uri) {
-          client.userAgent = globalState.ua;
-          return FlClashHttpOverrides.handleFindProxy(uri);
-        };
-        return client;
-      },
-    );
+    _clashDio = clashDio ?? Dio();
+    if (clashDio == null) {
+      _clashDio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () {
+          final client = HttpClient();
+          client.findProxy = (Uri uri) {
+            client.userAgent = globalState.ua;
+            return FlClashHttpOverrides.handleFindProxy(uri);
+          };
+          return client;
+        },
+      );
+    }
   }
 
   Future<Response<Uint8List>> getFileResponseForUrl(
@@ -41,13 +44,24 @@ class Request {
       if (userAgent != null) {
         requestHeaders['User-Agent'] = userAgent;
       }
-      return await _clashDio.get<Uint8List>(
-        url,
+      final resolvedUrl = await resolveSubscriptionInput(input: url);
+      final response = await _clashDio.get<Uint8List>(
+        resolvedUrl,
         options: Options(
           responseType: ResponseType.bytes,
           headers: requestHeaders.isEmpty ? null : requestHeaders,
         ),
       );
+      final data = response.data;
+      final encryptTag = response.headers.value('encrypt-tag');
+      if (data != null && encryptTag?.trim().isNotEmpty == true) {
+        response.data = await decryptSubscriptionResponse(
+          url: resolvedUrl,
+          body: data,
+          encryptTag: encryptTag,
+        );
+      }
+      return response;
     } catch (e) {
       commonPrint.log('getFileResponseForUrl error ${e.toString()}');
       if (e is DioException) {

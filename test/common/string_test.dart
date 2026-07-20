@@ -28,6 +28,43 @@ void main() {
     });
   });
 
+  group('StringExtension.isResolvableSubscriptionInput', () {
+    test('accepts supported encrypted links and wrappers', () {
+      const inputs = [
+        'happ://crypt/payload',
+        'happ://crypt2/payload',
+        'happ://crypt3/payload',
+        'happ://crypt4/payload',
+        'happ://crypt5/payload',
+        'happ://add/https%3A%2F%2Fexample.com%2Fsub',
+        'v2raytun://crypt/payload',
+        'v2raytun://import/payload',
+        'incy://add/payload',
+        'incy://import/payload',
+      ];
+
+      for (final input in inputs) {
+        expect(input.isResolvableSubscriptionInput, isTrue, reason: input);
+      }
+      expect('  HAPP://CRYPT5/payload  '.isResolvableSubscriptionInput, isTrue);
+    });
+
+    test('rejects unsupported or empty deep links', () {
+      const inputs = [
+        'happ://crypt/',
+        'happ://crypt6/payload',
+        'happ://unknown/payload',
+        'v2raytun://unknown/payload',
+        'incy://unknown/payload',
+        'vless://example.com',
+      ];
+
+      for (final input in inputs) {
+        expect(input.isResolvableSubscriptionInput, isFalse, reason: input);
+      }
+    });
+  });
+
   group('StringExtension.splitByMultipleSeparators', () {
     test('splits on comma', () {
       final result = 'a,b,c'.splitByMultipleSeparators;

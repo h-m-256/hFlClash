@@ -228,7 +228,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "custom": MessageLookupByLibrary.simpleMessage("カスタム"),
     "customSubscription": MessageLookupByLibrary.simpleMessage("カスタム購読"),
     "customSubscriptionDesc": MessageLookupByLibrary.simpleMessage(
-      "共有リンクをローカル変換し、カスタム User-Agent を使用",
+      "Xray JSON、共有リンク、Base64、happ://crypt、その他の暗号化形式",
     ),
     "cut": MessageLookupByLibrary.simpleMessage("切り取り"),
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),
@@ -444,6 +444,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "memoryInfo": MessageLookupByLibrary.simpleMessage("メモリ情報"),
     "messageTest": MessageLookupByLibrary.simpleMessage("メッセージテスト"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage("これはメッセージです。"),
+    "mihomoFormat": MessageLookupByLibrary.simpleMessage("Mihomo (Clash) 形式"),
     "min": MessageLookupByLibrary.simpleMessage("最小化"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage("終了時に最小化"),
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
