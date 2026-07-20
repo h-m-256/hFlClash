@@ -12,11 +12,13 @@ class SubscriptionConversionResult {
   final Uint8List bytes;
   final SubscriptionSourceType? sourceType;
   final Map<String, String> proxyLinks;
+  final Map<String, String>? protectedProxyLinks;
 
   const SubscriptionConversionResult({
     required this.bytes,
     this.sourceType,
     this.proxyLinks = const {},
+    this.protectedProxyLinks,
   });
 }
 
@@ -24,11 +26,13 @@ class SubscriptionTextConversionResult {
   final String content;
   final SubscriptionSourceType sourceType;
   final Map<String, String> proxyLinks;
+  final Map<String, String>? protectedProxyLinks;
 
   const SubscriptionTextConversionResult({
     required this.content,
     required this.sourceType,
     this.proxyLinks = const {},
+    this.protectedProxyLinks,
   });
 }
 
@@ -76,6 +80,7 @@ class SubscriptionConverter {
       bytes: Uint8List.fromList(utf8.encode(converted.content)),
       sourceType: converted.sourceType,
       proxyLinks: converted.proxyLinks,
+      protectedProxyLinks: converted.protectedProxyLinks,
     );
   }
 
@@ -99,7 +104,11 @@ class SubscriptionConverter {
     final normalized = _normalizeText(content);
     if (normalized.isEmpty || _isClashYaml(normalized)) return null;
 
-    final happJson = _tryConvertHappJson(normalized);
+    final happJson = _tryConvertHappJson(
+      normalized,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    );
     if (happJson != null) return happJson;
 
     final rawLinks = _extractLinks(normalized);
@@ -115,7 +124,11 @@ class SubscriptionConverter {
     final decoded = _decodeWholeBase64(normalized);
     if (decoded == null) return null;
 
-    final base64HappJson = _tryConvertHappJson(decoded);
+    final base64HappJson = _tryConvertHappJson(
+      decoded,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
+    );
     if (base64HappJson != null) return base64HappJson;
 
     final links = _extractLinks(decoded);
@@ -170,21 +183,42 @@ class SubscriptionConverter {
     final normalNames = normalProxies
         .map((proxy) => proxy['name'] as String)
         .toSet();
-    final normalLinks = entries.map((entry) => entry.link).toSet();
+    final normalEntriesByLink = <String, _ProxyEntry>{};
+    for (final entry in entries) {
+      normalEntriesByLink.putIfAbsent(entry.link, () => entry);
+    }
 
     final protectedEntries = <_ProxyEntry>[];
+    final resolvedProtectedProxyLinks = <String, String>{};
+    final pendingProtectedLinks = <MapEntry<String, String>>[];
     for (final item in protectedProxyLinks.entries) {
-      if (normalNames.contains(item.key) || normalLinks.contains(item.value)) {
+      final currentEntry = normalEntriesByLink[item.value];
+      if (currentEntry != null) {
+        final currentName = currentEntry.proxy['name'] as String;
+        resolvedProtectedProxyLinks[currentName] = item.value;
         continue;
       }
-      final proxy = _parseLink(item.value);
-      if (proxy == null) continue;
-      proxy['name'] = item.key;
-      protectedEntries.add(_ProxyEntry(proxy: proxy, link: item.value));
+      pendingProtectedLinks.add(item);
+    }
+
+    final usedNames = Set<String>.from(normalNames);
+    for (final collidesWithCurrent in [false, true]) {
+      for (final item in pendingProtectedLinks) {
+        if (normalNames.contains(item.key) != collidesWithCurrent) continue;
+        final proxy = _parseLink(item.value);
+        if (proxy == null) continue;
+        final name = _uniqueProtectedName(item.key, usedNames);
+        proxy['name'] = name;
+        protectedEntries.add(_ProxyEntry(proxy: proxy, link: item.value));
+        resolvedProtectedProxyLinks[name] = item.value;
+      }
     }
 
     final allEntries = [...protectedEntries, ...entries];
-    final favoriteNames = {...favoriteProxyNames, ...protectedProxyLinks.keys};
+    final favoriteNames = {
+      ...favoriteProxyNames,
+      ...resolvedProtectedProxyLinks.keys,
+    };
     final orderedEntries = [
       ...allEntries.where((entry) {
         return favoriteNames.contains(entry.proxy['name']);
@@ -203,6 +237,7 @@ class SubscriptionConverter {
       ),
       sourceType: sourceType,
       proxyLinks: proxyLinks,
+      protectedProxyLinks: resolvedProtectedProxyLinks,
     );
   }
 
@@ -238,14 +273,28 @@ class SubscriptionConverter {
     return convertText(content) != null;
   }
 
-  SubscriptionTextConversionResult? _tryConvertHappJson(String content) {
+  SubscriptionTextConversionResult? _tryConvertHappJson(
+    String content, {
+    required Set<String> favoriteProxyNames,
+    required Map<String, String> protectedProxyLinks,
+  }) {
     final data = _tryDecodeJson(content);
     if (data == null) return null;
     final proxies = _parseHappJson(data);
     if (proxies.isEmpty) return null;
-    return SubscriptionTextConversionResult(
-      content: _buildConfig(proxies),
+    _ensureUniqueNames(proxies);
+    final entries = <_ProxyEntry>[];
+    for (final proxy in proxies) {
+      final link = _vlessShareLink(proxy);
+      if (link == null) continue;
+      entries.add(_ProxyEntry(proxy: proxy, link: link));
+    }
+    if (entries.isEmpty) return null;
+    return _buildLinkResult(
+      entries,
       sourceType: SubscriptionSourceType.happJson,
+      favoriteProxyNames: favoriteProxyNames,
+      protectedProxyLinks: protectedProxyLinks,
     );
   }
 
@@ -400,6 +449,184 @@ class SubscriptionConverter {
     final base = profileName?.takeIfNotEmpty ?? 'vless-$server:$port';
     if (tag == null || tag == 'proxy') return base;
     return '$base $tag';
+  }
+
+  String? _vlessShareLink(Map<String, dynamic> proxy) {
+    final server = proxy['server']?.toString();
+    final port = _intValue(proxy['port']);
+    final uuid = proxy['uuid']?.toString();
+    final name = proxy['name']?.toString();
+    if (server == null ||
+        server.isEmpty ||
+        port == null ||
+        uuid == null ||
+        uuid.isEmpty ||
+        name == null ||
+        name.isEmpty) {
+      return null;
+    }
+
+    final params = <String, String>{};
+    _putQueryValue(params, 'flow', proxy['flow']);
+    _putQueryValue(params, 'encryption', proxy['encryption']);
+
+    final realityOpts = _asMap(proxy['reality-opts']);
+    if (realityOpts != null && realityOpts.isNotEmpty) {
+      params['security'] = 'reality';
+      _putQueryValue(params, 'pbk', realityOpts['public-key']);
+      _putQueryValue(params, 'sid', realityOpts['short-id']);
+      _putQueryValue(params, 'spx', realityOpts['spider-x']);
+    } else if (proxy['tls'] == true) {
+      params['security'] = 'tls';
+    }
+    _putQueryValue(params, 'sni', proxy['servername']);
+    _putQueryValue(params, 'fp', proxy['client-fingerprint']);
+    final alpn = _stringList(proxy['alpn']);
+    if (alpn.isNotEmpty) params['alpn'] = alpn.join(',');
+    if (proxy['skip-cert-verify'] == true) params['insecure'] = '1';
+
+    final network = proxy['network']?.toString().takeIfNotEmpty ?? 'tcp';
+    params['type'] = network;
+    switch (network) {
+      case 'grpc':
+        final grpc = _asMap(proxy['grpc-opts']);
+        _putQueryValue(params, 'serviceName', grpc?['grpc-service-name']);
+        break;
+      case 'ws':
+      case 'httpupgrade':
+        final ws = _asMap(proxy['ws-opts']);
+        final headers = _asMap(ws?['headers']);
+        _putQueryValue(params, 'path', ws?['path']);
+        _putQueryValue(params, 'host', headers?['Host']);
+        _putQueryValue(params, 'ed', ws?['max-early-data']);
+        _putQueryValue(params, 'eh', ws?['early-data-header-name']);
+        break;
+      case 'h2':
+        final h2 = _asMap(proxy['h2-opts']);
+        _putQueryValue(params, 'path', h2?['path']);
+        final hosts = _stringList(h2?['host']);
+        if (hosts.isNotEmpty) params['host'] = hosts.join(',');
+        break;
+      case 'xhttp':
+        final xhttp = _asMap(proxy['xhttp-opts']);
+        _putQueryValue(params, 'path', xhttp?['path']);
+        _putQueryValue(params, 'host', xhttp?['host']);
+        _putQueryValue(params, 'mode', xhttp?['mode']);
+        final headers = _asStringMap(xhttp?['headers']);
+        if (headers != null) params['headers'] = json.encode(headers);
+        final extra = _xhttpExtraFromProxy(xhttp);
+        if (extra.isNotEmpty) params['extra'] = json.encode(extra);
+        break;
+    }
+
+    try {
+      return Uri(
+        scheme: 'vless',
+        userInfo: uuid,
+        host: server,
+        port: port,
+        queryParameters: params,
+        fragment: name,
+      ).toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _putQueryValue(Map<String, String> params, String key, Object? value) {
+    final text = value?.toString();
+    if (text != null && text.isNotEmpty) params[key] = text;
+  }
+
+  Map<String, dynamic> _xhttpExtraFromProxy(Map<String, dynamic>? xhttp) {
+    if (xhttp == null) return {};
+    const keys = <String, String>{
+      'no-grpc-header': 'noGRPCHeader',
+      'x-padding-bytes': 'xPaddingBytes',
+      'x-padding-obfs-mode': 'xPaddingObfsMode',
+      'x-padding-key': 'xPaddingKey',
+      'x-padding-header': 'xPaddingHeader',
+      'x-padding-placement': 'xPaddingPlacement',
+      'x-padding-method': 'xPaddingMethod',
+      'uplink-http-method': 'uplinkHttpMethod',
+      'session-placement': 'sessionPlacement',
+      'session-key': 'sessionKey',
+      'seq-placement': 'seqPlacement',
+      'seq-key': 'seqKey',
+      'uplink-data-placement': 'uplinkDataPlacement',
+      'uplink-data-key': 'uplinkDataKey',
+      'uplink-chunk-size': 'uplinkChunkSize',
+      'sc-max-each-post-bytes': 'scMaxEachPostBytes',
+      'sc-min-posts-interval-ms': 'scMinPostsIntervalMs',
+    };
+    final extra = <String, dynamic>{};
+    for (final entry in keys.entries) {
+      final value = xhttp[entry.key];
+      if (value != null) extra[entry.value] = value;
+    }
+    final xmux = _xhttpXmuxFromProxy(_asMap(xhttp['reuse-settings']));
+    if (xmux.isNotEmpty) extra['xmux'] = xmux;
+    final download = _xhttpDownloadFromProxy(
+      _asMap(xhttp['download-settings']),
+    );
+    if (download != null) extra['downloadSettings'] = download;
+    return extra;
+  }
+
+  Map<String, dynamic> _xhttpXmuxFromProxy(Map<String, dynamic>? settings) {
+    if (settings == null) return {};
+    const keys = <String, String>{
+      'max-connections': 'maxConnections',
+      'max-concurrency': 'maxConcurrency',
+      'c-max-reuse-times': 'cMaxReuseTimes',
+      'h-max-request-times': 'hMaxRequestTimes',
+      'h-max-reusable-secs': 'hMaxReusableSecs',
+      'h-keep-alive-period': 'hKeepAlivePeriod',
+    };
+    return {
+      for (final entry in keys.entries)
+        if (settings[entry.key] != null) entry.value: settings[entry.key],
+    };
+  }
+
+  Map<String, dynamic>? _xhttpDownloadFromProxy(
+    Map<String, dynamic>? settings,
+  ) {
+    if (settings == null) return null;
+    final download = <String, dynamic>{};
+    _putDynamic(download, 'address', settings['server']);
+    _putDynamic(download, 'port', settings['port']);
+
+    final realityOpts = _asMap(settings['reality-opts']);
+    if (realityOpts != null && realityOpts.isNotEmpty) {
+      download['security'] = 'reality';
+      final reality = <String, dynamic>{};
+      _putDynamic(reality, 'publicKey', realityOpts['public-key']);
+      _putDynamic(reality, 'shortId', realityOpts['short-id']);
+      if (reality.isNotEmpty) download['realitySettings'] = reality;
+    } else if (settings['tls'] == true) {
+      download['security'] = 'tls';
+    }
+
+    if (settings['tls'] == true) {
+      final tls = <String, dynamic>{};
+      _putDynamic(tls, 'serverName', settings['servername']);
+      _putDynamic(tls, 'fingerprint', settings['client-fingerprint']);
+      final alpn = _stringList(settings['alpn']);
+      if (alpn.isNotEmpty) tls['alpn'] = alpn;
+      if (settings['skip-cert-verify'] == true) tls['allowInsecure'] = true;
+      if (tls.isNotEmpty) download['tlsSettings'] = tls;
+    }
+
+    final xhttp = <String, dynamic>{};
+    _putDynamic(xhttp, 'path', settings['path']);
+    _putDynamic(xhttp, 'host', settings['host']);
+    final headers = _asStringMap(settings['headers']);
+    if (headers != null) xhttp['headers'] = headers;
+    final xmux = _xhttpXmuxFromProxy(_asMap(settings['reuse-settings']));
+    if (xmux.isNotEmpty) xhttp['extra'] = {'xmux': xmux};
+    if (xhttp.isNotEmpty) download['xhttpSettings'] = xhttp;
+    return download.isEmpty ? null : download;
   }
 
   List<String> _extractLinks(String content) {
@@ -1067,6 +1294,21 @@ class SubscriptionConverter {
       final count = used[name] ?? 0;
       used[name] = count + 1;
       proxy['name'] = count == 0 ? name : '$name ${count + 1}';
+    }
+  }
+
+  String _uniqueProtectedName(String preferredName, Set<String> usedNames) {
+    final trimmed = preferredName.trim();
+    final preferred = trimmed.isEmpty ? 'Proxy' : trimmed;
+    if (usedNames.add(preferred)) return preferred;
+
+    final suffixMatch = RegExp(r'^(.*) \((\d+)\)$').firstMatch(preferred);
+    final base = suffixMatch?.group(1) ?? preferred;
+    var suffix = suffixMatch == null ? 1 : int.parse(suffixMatch.group(2)!) + 1;
+    while (true) {
+      final candidate = '$base ($suffix)';
+      if (usedNames.add(candidate)) return candidate;
+      suffix += 1;
     }
   }
 

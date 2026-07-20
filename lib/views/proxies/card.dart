@@ -136,36 +136,33 @@ class ProxyCard extends StatelessWidget {
 
   Widget _withProxyMenu({
     required BuildContext context,
-    required Widget child,
+    required Widget Function(VoidCallback? onLongPress) cardBuilder,
   }) {
     return Consumer(
       builder: (context, ref, _) {
         final profile = ref.watch(currentProfileProvider);
         final link = profile?.proxyLinks[proxy.name];
-        if (profile?.convertSubscription != true || link == null) return child;
+        if (profile?.convertSubscription != true) return cardBuilder(null);
         final isFavorite = profile!.favoriteProxyNames.contains(proxy.name);
         final isProtected = profile.protectedProxyLinks.containsKey(proxy.name);
         final appLocalizations = context.appLocalizations;
         return CommonPopupBox(
           targetBuilder: (open) {
-            return GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onLongPress: () {
-                open(offset: const Offset(0, 20));
-              },
-              child: child,
-            );
+            return cardBuilder(() {
+              open(offset: const Offset(0, 20));
+            });
           },
           popup: CommonPopupMenu(
             minWidth: 240,
             items: [
-              PopupMenuItemData(
-                icon: Icons.link,
-                label: appLocalizations.copyLink,
-                onPressed: () {
-                  _copyProxyLink(context, link);
-                },
-              ),
+              if (link != null)
+                PopupMenuItemData(
+                  icon: Icons.link,
+                  label: appLocalizations.copyLink,
+                  onPressed: () {
+                    _copyProxyLink(context, link);
+                  },
+                ),
               PopupMenuItemData(
                 icon: isFavorite ? Icons.star_outline : Icons.star_rounded,
                 label: isFavorite
@@ -175,17 +172,18 @@ class ProxyCard extends StatelessWidget {
                   _toggleFavorite(ref);
                 },
               ),
-              PopupMenuItemData(
-                icon: isProtected
-                    ? Icons.lock_open_rounded
-                    : Icons.lock_rounded,
-                label: isProtected
-                    ? appLocalizations.removeProtectedProxyFavorite
-                    : appLocalizations.addProtectedProxyFavorite,
-                onPressed: () {
-                  _toggleProtectedFavorite(ref, link);
-                },
-              ),
+              if (link != null)
+                PopupMenuItemData(
+                  icon: isProtected
+                      ? Icons.lock_open_rounded
+                      : Icons.lock_rounded,
+                  label: isProtected
+                      ? appLocalizations.removeProtectedProxyFavorite
+                      : appLocalizations.addProtectedProxyFavorite,
+                  onPressed: () {
+                    _toggleProtectedFavorite(ref, link);
+                  },
+                ),
             ],
           ),
         );
@@ -193,12 +191,11 @@ class ProxyCard extends StatelessWidget {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCard(BuildContext context, VoidCallback? onLongPress) {
     final measure = globalState.measure;
     final delayText = _buildDelayText();
     final proxyNameText = _buildProxyNameText(context);
-    final card = Stack(
+    return Stack(
       children: [
         Consumer(
           builder: (_, ref, child) {
@@ -210,6 +207,7 @@ class ProxyCard extends StatelessWidget {
               onPressed: () {
                 _changeProxy(ref);
               },
+              onLongPress: onLongPress,
               isSelected: selectedProxyName == proxy.name,
               child: child!,
             );
@@ -265,12 +263,21 @@ class ProxyCard extends StatelessWidget {
           Positioned(
             top: 0,
             right: 0,
-            child: _ProxyComputedMark(groupName: groupName, proxy: proxy),
+            child: IgnorePointer(
+              child: _ProxyComputedMark(groupName: groupName, proxy: proxy),
+            ),
           ),
         _ProxyFavoriteMark(proxy: proxy),
       ],
     );
-    return _withProxyMenu(context: context, child: card);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _withProxyMenu(
+      context: context,
+      cardBuilder: (onLongPress) => _buildCard(context, onLongPress),
+    );
   }
 }
 
@@ -291,18 +298,20 @@ class _ProxyFavoriteMark extends ConsumerWidget {
     return Positioned(
       top: 0,
       left: 0,
-      child: Container(
-        alignment: Alignment.topLeft,
-        margin: const EdgeInsets.all(8),
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: context.colorScheme.secondaryContainer,
-        ),
-        child: Icon(
-          Icons.star_rounded,
-          size: 14,
-          color: context.colorScheme.primary,
+      child: IgnorePointer(
+        child: Container(
+          alignment: Alignment.topLeft,
+          margin: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: context.colorScheme.secondaryContainer,
+          ),
+          child: Icon(
+            Icons.star_rounded,
+            size: 14,
+            color: context.colorScheme.primary,
+          ),
         ),
       ),
     );

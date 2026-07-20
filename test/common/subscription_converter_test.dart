@@ -156,6 +156,55 @@ void main() {
       );
     });
 
+    test('renames protected favorites that collide with updated proxies', () {
+      const updatedLink =
+          'vless://00000000-0000-0000-0000-000000000001@new.example:443'
+          '?encryption=none&type=tcp#Germany%201';
+      const protectedLink =
+          'vless://00000000-0000-0000-0000-000000000002@old.example:443'
+          '?encryption=none&type=tcp#Germany%201';
+
+      final converted = converter.convertBytes(
+        Uint8List.fromList(utf8.encode(updatedLink)),
+        protectedProxyLinks: {'Germany 1': protectedLink},
+      );
+      final yaml = utf8.decode(converted.bytes);
+
+      expect(converted.proxyLinks['Germany 1'], updatedLink);
+      expect(converted.proxyLinks['Germany 1 (1)'], protectedLink);
+      expect(converted.protectedProxyLinks, {'Germany 1 (1)': protectedLink});
+      expect(yaml, contains('name: "Germany 1"'));
+      expect(yaml, contains('name: "Germany 1 (1)"'));
+      expect(yaml, contains('server: "old.example"'));
+    });
+
+    test('increments protected favorite collision suffixes', () {
+      const updatedLink =
+          'vless://00000000-0000-0000-0000-000000000001@new.example:443'
+          '?encryption=none&type=tcp#Germany%201';
+      const previousProtectedLink =
+          'vless://00000000-0000-0000-0000-000000000002@previous.example:443'
+          '?encryption=none&type=tcp#Germany%201';
+      const olderProtectedLink =
+          'vless://00000000-0000-0000-0000-000000000003@older.example:443'
+          '?encryption=none&type=tcp#Germany%201';
+
+      final converted = converter.convertText(
+        updatedLink,
+        protectedProxyLinks: {
+          'Germany 1': previousProtectedLink,
+          'Germany 1 (1)': olderProtectedLink,
+        },
+      );
+
+      expect(converted?.protectedProxyLinks, {
+        'Germany 1 (1)': olderProtectedLink,
+        'Germany 1 (2)': previousProtectedLink,
+      });
+      expect(converted?.content, contains('name: "Germany 1 (1)"'));
+      expect(converted?.content, contains('name: "Germany 1 (2)"'));
+    });
+
     test('normalizes html escaped query separators', () {
       final yaml = converter.convertTextIfNeeded(
         'vless://00000000-0000-0000-0000-000000000000@example.com:443'
@@ -232,7 +281,7 @@ void main() {
       expect(yaml, contains('path: "/download"'));
     });
 
-    test('converts HAPP JSON vless outbounds', () {
+    test('converts Xray JSON vless outbounds', () {
       final happJson = jsonEncode([
         {
           'remarks': 'HAPP Profile',
@@ -283,6 +332,65 @@ void main() {
       expect(yaml, contains('grpc-service-name: "gun"'));
       expect(yaml, contains('reality-opts:'));
       expect(yaml, contains('public-key: "public-key"'));
+      expect(converted?.proxyLinks['HAPP Profile'], startsWith('vless://'));
+    });
+
+    test('protects Xray JSON proxies across colliding updates', () {
+      final oldJson = jsonEncode([
+        _xrayVlessProfile(
+          name: 'Germany 1',
+          server: 'old.example',
+          uuid: '00000000-0000-0000-0000-000000000001',
+        ),
+      ]);
+      final oldConversion = converter.convertText(oldJson)!;
+      final protectedLink = oldConversion.proxyLinks['Germany 1']!;
+      final updatedJson = jsonEncode([
+        _xrayVlessProfile(
+          name: 'Germany 1',
+          server: 'new.example',
+          uuid: '00000000-0000-0000-0000-000000000002',
+        ),
+      ]);
+
+      final converted = converter.convertText(
+        updatedJson,
+        protectedProxyLinks: {'Germany 1': protectedLink},
+      );
+
+      expect(converted?.proxyLinks['Germany 1'], isNot(protectedLink));
+      expect(converted?.proxyLinks['Germany 1 (1)'], protectedLink);
+      expect(converted?.protectedProxyLinks, {'Germany 1 (1)': protectedLink});
+      expect(converted?.content, contains('server: "new.example"'));
+      expect(converted?.content, contains('server: "old.example"'));
     });
   });
+}
+
+Map<String, dynamic> _xrayVlessProfile({
+  required String name,
+  required String server,
+  required String uuid,
+}) {
+  return {
+    'remarks': name,
+    'outbounds': [
+      {
+        'tag': 'proxy',
+        'protocol': 'vless',
+        'settings': {
+          'vnext': [
+            {
+              'address': server,
+              'port': 443,
+              'users': [
+                {'id': uuid, 'encryption': 'none'},
+              ],
+            },
+          ],
+        },
+        'streamSettings': {'network': 'tcp', 'security': 'tls'},
+      },
+    ],
+  };
 }

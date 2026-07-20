@@ -265,6 +265,7 @@ extension ProfileExtension on Profile {
           ? converted.sourceType ?? sourceType
           : null,
       proxyLinks: convertSubscription ? converted.proxyLinks : {},
+      protectedProxyLinks: converted.protectedProxyLinks ?? protectedProxyLinks,
     );
   }
 
