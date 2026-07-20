@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -72,10 +74,16 @@ Future<void> proxyDelayTest(
     return;
   }
   if (task?.isCancelled == true) return;
-  ref
-      .read(proxiesActionProvider.notifier)
-      .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: 0));
-  final delay = await coreController.getDelay(currentTestUrl, state.proxyName);
+  if (task == null) {
+    ref
+        .read(proxiesActionProvider.notifier)
+        .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: 0));
+  }
+  final delay = await coreController.getDelay(
+    currentTestUrl,
+    state.proxyName,
+    testId: task?.id,
+  );
   if (task?.isCancelled == true) return;
   ref.read(proxiesActionProvider.notifier).setDelay(delay);
 }
@@ -87,12 +95,16 @@ DelayTestTask delayTest(List<Proxy> proxies, [String? testUrl]) {
 class DelayTestTask {
   final List<Proxy> proxies;
   final String? testUrl;
+  final String id = utils.uuidV4;
   late final ValueNotifier<DelayTestProgress> progressNotifier = ValueNotifier(
     DelayTestProgress(completed: 0, total: proxies.length),
   );
+  late final Future<bool> _startFuture = _startCoreTest();
   late final Future<void> done = _run();
+  Future<void>? _cancelFuture;
   bool _isCancelled = false;
   bool _isCompleted = false;
+  bool _disposeRequested = false;
 
   DelayTestTask._(this.proxies, this.testUrl);
 
@@ -105,12 +117,25 @@ class DelayTestTask {
   bool get shouldShowProgress => total > 0;
 
   void cancel() {
+    if (_isCancelled || _isCompleted) return;
     _isCancelled = true;
     progressNotifier.value = progressNotifier.value.copyWith(cancelled: true);
+    _cancelFuture ??= _cancelCoreTest();
   }
 
   void dispose() {
-    progressNotifier.dispose();
+    if (_disposeRequested) return;
+    _disposeRequested = true;
+    if (_isCompleted) {
+      progressNotifier.dispose();
+      return;
+    }
+    unawaited(
+      done.then<void>(
+        (_) => progressNotifier.dispose(),
+        onError: (_, _) => progressNotifier.dispose(),
+      ),
+    );
   }
 
   void _increaseProgress() {
@@ -122,7 +147,15 @@ class DelayTestTask {
   }
 
   Future<void> _run() async {
+    var sessionStarted = false;
     try {
+      if (proxies.isEmpty) return;
+      sessionStarted = await _startFuture;
+      if (!sessionStarted) return;
+      if (_isCancelled) {
+        await (_cancelFuture ??= _cancelCoreTest());
+        return;
+      }
       for (final batch in proxies.batch(100)) {
         if (_isCancelled) return;
         await Future.wait(
@@ -139,7 +172,56 @@ class DelayTestTask {
         globalState.container.read(sortNumProvider.notifier).add();
       }
     } finally {
-      _isCompleted = true;
+      try {
+        if (_isCancelled && sessionStarted) {
+          await (_cancelFuture ??= _cancelCoreTest());
+        }
+        if (proxies.isNotEmpty) {
+          await _finishCoreTest();
+        }
+      } finally {
+        _isCompleted = true;
+      }
+    }
+  }
+
+  Future<bool> _startCoreTest() async {
+    if (proxies.isEmpty) return false;
+    try {
+      return await coreController.startDelayTest(id);
+    } catch (e) {
+      commonPrint.log(
+        'Failed to start delay test session: $e',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+  }
+
+  Future<void> _cancelCoreTest() async {
+    if (!await _startFuture) {
+      await _finishCoreTest();
+      return;
+    }
+    try {
+      await coreController.cancelDelayTest(id);
+    } catch (e) {
+      commonPrint.log(
+        'Failed to cancel delay test session: $e',
+        logLevel: LogLevel.warning,
+      );
+      await _finishCoreTest();
+    }
+  }
+
+  Future<void> _finishCoreTest() async {
+    try {
+      await coreController.finishDelayTest(id);
+    } catch (e) {
+      commonPrint.log(
+        'Failed to finish delay test session: $e',
+        logLevel: LogLevel.warning,
+      );
     }
   }
 }

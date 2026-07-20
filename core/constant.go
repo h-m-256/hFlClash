@@ -55,6 +55,7 @@ type ChangeProxyParams struct {
 type TestDelayParams struct {
 	ProxyName string `json:"proxy-name"`
 	TestUrl   string `json:"test-url"`
+	TestId    string `json:"test-id"`
 	Timeout   int64  `json:"timeout"`
 }
 
@@ -86,7 +87,10 @@ const (
 	getTrafficMethod               Method = "getTraffic"
 	getTotalTrafficMethod          Method = "getTotalTraffic"
 	resetTrafficMethod             Method = "resetTraffic"
+	startDelayTestMethod           Method = "startDelayTest"
 	asyncTestDelayMethod           Method = "asyncTestDelay"
+	cancelDelayTestMethod          Method = "cancelDelayTest"
+	finishDelayTestMethod          Method = "finishDelayTest"
 	getConnectionsMethod           Method = "getConnections"
 	closeConnectionsMethod         Method = "closeConnections"
 	resetConnectionsMethod         Method = "resetConnections"

@@ -20,7 +20,13 @@ mixin CoreInterface {
 
   Future<Result> getConfig(String path);
 
-  Future<String> asyncTestDelay(String url, String proxyName);
+  Future<bool> startDelayTest(String id);
+
+  Future<String> asyncTestDelay(String url, String proxyName, {String? testId});
+
+  Future<bool> cancelDelayTest(String id);
+
+  Future<bool> finishDelayTest(String id);
 
   Future<String> updateConfig(UpdateParams updateParams);
 
@@ -317,11 +323,22 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<String> asyncTestDelay(String url, String proxyName) async {
+  Future<bool> startDelayTest(String id) async {
+    return await _invoke<bool>(method: ActionMethod.startDelayTest, data: id) ??
+        false;
+  }
+
+  @override
+  Future<String> asyncTestDelay(
+    String url,
+    String proxyName, {
+    String? testId,
+  }) async {
     final delayParams = {
       'proxy-name': proxyName,
       'timeout': httpTimeoutDuration.inMilliseconds,
       'test-url': url,
+      'test-id': ?testId,
     };
     return await _invoke<String>(
           method: ActionMethod.asyncTestDelay,
@@ -329,6 +346,24 @@ abstract class CoreHandlerInterface with CoreInterface {
           timeout: const Duration(seconds: 6),
         ) ??
         json.encode(Delay(name: proxyName, value: -1, url: url));
+  }
+
+  @override
+  Future<bool> cancelDelayTest(String id) async {
+    return await _invoke<bool>(
+          method: ActionMethod.cancelDelayTest,
+          data: id,
+        ) ??
+        false;
+  }
+
+  @override
+  Future<bool> finishDelayTest(String id) async {
+    return await _invoke<bool>(
+          method: ActionMethod.finishDelayTest,
+          data: id,
+        ) ??
+        false;
   }
 
   @override

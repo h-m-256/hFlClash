@@ -95,11 +95,23 @@ func handleAction(action *Action, result ActionResult) {
 		handleResetTraffic()
 		result.success(true)
 		return
+	case startDelayTestMethod:
+		id := action.Data.(string)
+		result.success(handleStartDelayTest(id))
+		return
 	case asyncTestDelayMethod:
 		data := action.Data.(string)
 		handleAsyncTestDelay(data, func(value string) {
 			result.success(value)
 		})
+		return
+	case cancelDelayTestMethod:
+		id := action.Data.(string)
+		result.success(handleCancelDelayTest(id))
+		return
+	case finishDelayTestMethod:
+		id := action.Data.(string)
+		result.success(handleFinishDelayTest(id))
 		return
 	case getConnectionsMethod:
 		result.success(handleGetConnections())

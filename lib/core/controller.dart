@@ -203,9 +203,25 @@ class CoreController {
     return _interface.stopListener();
   }
 
-  Future<Delay> getDelay(String url, String proxyName) async {
-    final data = await _interface.asyncTestDelay(url, proxyName);
+  Future<bool> startDelayTest(String id) {
+    return _interface.startDelayTest(id);
+  }
+
+  Future<Delay> getDelay(String url, String proxyName, {String? testId}) async {
+    final data = await _interface.asyncTestDelay(
+      url,
+      proxyName,
+      testId: testId,
+    );
     return Delay.fromJson(json.decode(data));
+  }
+
+  Future<bool> cancelDelayTest(String id) {
+    return _interface.cancelDelayTest(id);
+  }
+
+  Future<bool> finishDelayTest(String id) {
+    return _interface.finishDelayTest(id);
   }
 
   Future<Map<String, dynamic>> getConfig(int id) async {

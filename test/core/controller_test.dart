@@ -233,6 +233,41 @@ void main() {
       expect(result.value, 100);
     });
 
+    test('getDelay passes delay test session id', () async {
+      when(
+        () => mock.asyncTestDelay(any(), any(), testId: any(named: 'testId')),
+      ).thenAnswer(
+        (_) async =>
+            json.encode({'name': 'P1', 'value': 100, 'url': 'test.com'}),
+      );
+
+      await controller.getDelay('test.com', 'P1', testId: 'delay-test-1');
+
+      verify(
+        () => mock.asyncTestDelay('test.com', 'P1', testId: 'delay-test-1'),
+      ).called(1);
+    });
+
+    test('delay test lifecycle delegates to interface', () async {
+      when(
+        () => mock.startDelayTest('delay-test-1'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mock.cancelDelayTest('delay-test-1'),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mock.finishDelayTest('delay-test-1'),
+      ).thenAnswer((_) async => true);
+
+      expect(await controller.startDelayTest('delay-test-1'), true);
+      expect(await controller.cancelDelayTest('delay-test-1'), true);
+      expect(await controller.finishDelayTest('delay-test-1'), true);
+
+      verify(() => mock.startDelayTest('delay-test-1')).called(1);
+      verify(() => mock.cancelDelayTest('delay-test-1')).called(1);
+      verify(() => mock.finishDelayTest('delay-test-1')).called(1);
+    });
+
     test('startListener delegates', () async {
       when(() => mock.startListener()).thenAnswer((_) async => true);
       final result = await controller.startListener();

@@ -80,6 +80,7 @@ func handleForceGC() {
 }
 
 func handleShutdown() bool {
+	handleCancelAllDelayTests()
 	stopListeners()
 	executor.Shutdown()
 	handleForceGC()
@@ -216,40 +217,54 @@ func handleAsyncTestDelay(paramsString string, fn func(string)) {
 			return false, nil
 		}
 
+		delayData := &Delay{
+			Name: params.ProxyName,
+		}
+
+		testUrl := constant.DefaultTestURL
+		if params.TestUrl != "" {
+			testUrl = params.TestUrl
+		}
+		delayData.Url = testUrl
+		sendError := func() {
+			delayData.Value = -1
+			data, _ := json.Marshal(delayData)
+			fn(string(data))
+		}
+
 		expectedStatus, err := utils.NewUnsignedRanges[uint16]("")
 		if err != nil {
 			fn("")
 			return false, nil
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
+		parentContext, exists := getDelayTestContext(params.TestId)
+		if !exists {
+			sendError()
+			return false, nil
+		}
+		ctx, cancel := context.WithTimeout(parentContext, time.Millisecond*time.Duration(params.Timeout))
 		defer cancel()
+		if ctx.Err() != nil {
+			sendError()
+			return false, nil
+		}
 
 		proxies := tunnel.AllProxies()
 		proxy := proxies[params.ProxyName]
 
-		delayData := &Delay{
-			Name: params.ProxyName,
-		}
-
 		if proxy == nil {
-			delayData.Value = -1
-			data, _ := json.Marshal(delayData)
-			fn(string(data))
+			sendError()
 			return false, nil
 		}
-
-		testUrl := constant.DefaultTestURL
-
-		if params.TestUrl != "" {
-			testUrl = params.TestUrl
+		var delay uint16
+		if params.TestId == "" {
+			delay, err = proxy.URLTest(ctx, testUrl, expectedStatus)
+		} else {
+			delay, err = testProxyDelay(ctx, proxy, testUrl, expectedStatus)
 		}
-		delayData.Url = testUrl
-		delay, err := proxy.URLTest(ctx, testUrl, expectedStatus)
 		if err != nil || delay == 0 {
-			delayData.Value = -1
-			data, _ := json.Marshal(delayData)
-			fn(string(data))
+			sendError()
 			return false, nil
 		}
 
