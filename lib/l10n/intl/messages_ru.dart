@@ -1013,7 +1013,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
       "Clash/Mihomo YAML",
     ),
-    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("Xray JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("Исходный IP"),
     "sourceShareLinks": MessageLookupByLibrary.simpleMessage("Обычные ссылки"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("Специальный прокси"),
@@ -1152,7 +1152,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
     "xHwidDesc": MessageLookupByLibrary.simpleMessage(
-      "ID устройства для подписок, требующих привязку HAPP к железу",
+      "ID устройства для подписок, требующих привязку к устройству",
     ),
     "yearsAgo": m25,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),

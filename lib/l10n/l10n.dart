@@ -529,10 +529,10 @@ class AppLocalizations {
     return Intl.message('X-HWID', name: 'xHwid', desc: '', args: []);
   }
 
-  /// `Device ID sent to subscriptions that require HAPP hardware binding`
+  /// `Device ID sent to subscriptions that require device binding`
   String get xHwidDesc {
     return Intl.message(
-      'Device ID sent to subscriptions that require HAPP hardware binding',
+      'Device ID sent to subscriptions that require device binding',
       name: 'xHwidDesc',
       desc: '',
       args: [],
@@ -579,10 +579,10 @@ class AppLocalizations {
     );
   }
 
-  /// `HAPP JSON`
+  /// `Xray JSON`
   String get sourceHappJson {
     return Intl.message(
-      'HAPP JSON',
+      'Xray JSON',
       name: 'sourceHappJson',
       desc: '',
       args: [],

@@ -968,7 +968,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
       "Clash/Mihomo YAML",
     ),
-    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("Xray JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("Source IP"),
     "sourceShareLinks": MessageLookupByLibrary.simpleMessage("Share links"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("Special proxy"),
@@ -1087,7 +1087,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
     "xHwidDesc": MessageLookupByLibrary.simpleMessage(
-      "Device ID sent to subscriptions that require HAPP hardware binding",
+      "Device ID sent to subscriptions that require device binding",
     ),
     "yearsAgo": m25,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),

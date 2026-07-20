@@ -674,7 +674,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
       "Clash/Mihomo YAML",
     ),
-    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("Xray JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("源IP"),
     "sourceShareLinks": MessageLookupByLibrary.simpleMessage("分享链接"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("特殊代理"),
@@ -764,9 +764,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
-    "xHwidDesc": MessageLookupByLibrary.simpleMessage(
-      "发送给需要 HAPP 硬件绑定的订阅的设备 ID",
-    ),
+    "xHwidDesc": MessageLookupByLibrary.simpleMessage("发送给需要设备绑定的订阅的设备 ID"),
     "yearsAgo": m25,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };

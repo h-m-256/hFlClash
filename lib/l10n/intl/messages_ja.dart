@@ -780,7 +780,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "sourceClashYaml": MessageLookupByLibrary.simpleMessage(
       "Clash/Mihomo YAML",
     ),
-    "sourceHappJson": MessageLookupByLibrary.simpleMessage("HAPP JSON"),
+    "sourceHappJson": MessageLookupByLibrary.simpleMessage("Xray JSON"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("送信元IP"),
     "sourceShareLinks": MessageLookupByLibrary.simpleMessage("共有リンク"),
     "specialProxy": MessageLookupByLibrary.simpleMessage("特殊プロキシ"),
@@ -877,7 +877,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "xHwid": MessageLookupByLibrary.simpleMessage("X-HWID"),
     "xHwidDesc": MessageLookupByLibrary.simpleMessage(
-      "HAPP のハードウェア紐付けが必要な購読に送信するデバイス ID",
+      "デバイス紐付けが必要な購読に送信するデバイス ID",
     ),
     "yearsAgo": m25,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
